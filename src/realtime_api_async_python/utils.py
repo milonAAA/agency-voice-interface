@@ -69,7 +69,7 @@ def log_ws_event(direction: str, event: dict):
 def structured_output_prompt(prompt: str, response_format: BaseModel) -> BaseModel:
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     completion = client.beta.chat.completions.parse(
-        model="gpt-4o-2024-08-06",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         response_format=response_format,
     )

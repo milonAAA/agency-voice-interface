@@ -19,6 +19,7 @@ from realtime_api_async_python.utils import (
 )
 from realtime_api_async_python.websocket_handler import process_ws_messages
 
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
@@ -160,6 +161,36 @@ async def realtime_api():
                                         },
                                     },
                                     "required": ["prompt"],
+                                },
+                            },
+                            {
+                                "type": "function",
+                                "name": "delegate_task_to_developer",
+                                "description": "Delegates a task to the Developer agent in the Agency Swarm.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "task_description": {
+                                            "type": "string",
+                                            "description": "Description of the task to delegate.",
+                                        },
+                                    },
+                                    "required": ["task_description"],
+                                },
+                            },
+                            {
+                                "type": "function",
+                                "name": "assign_task_to_virtual_assistant",
+                                "description": "Assigns a task to the Virtual Assistant agent in the Agency Swarm.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "task_description": {
+                                            "type": "string",
+                                            "description": "Description of the task to assign.",
+                                        },
+                                    },
+                                    "required": ["task_description"],
                                 },
                             },
                         ],

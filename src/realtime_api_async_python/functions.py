@@ -1,4 +1,5 @@
 # src/realtime_api_async_python/functions.py
+import asyncio
 import os
 import json
 import logging
@@ -14,7 +15,10 @@ from realtime_api_async_python.models import (
 )
 from realtime_api_async_python.utils import structured_output_prompt, chat_prompt
 from realtime_api_async_python.config import SCRATCH_PAD_DIR
-import asyncio
+from realtime_api_async_python.agency_functions import (
+    delegate_task_to_developer,
+    assign_task_to_virtual_assistant,
+)
 
 
 @timeit_decorator
@@ -142,7 +146,7 @@ async def delete_file(prompt: str, force_delete: bool = False) -> dict:
 
 
 @timeit_decorator
-async def update_file(prompt: str, model: ModelName = ModelName.BASE_MODEL) -> dict:
+async def update_file(prompt: str) -> dict:
     import os
 
     available_files = os.listdir(SCRATCH_PAD_DIR)
@@ -233,4 +237,6 @@ FUNCTION_MAP = {
     "create_file": create_file,
     "update_file": update_file,
     "delete_file": delete_file,
+    "delegate_task_to_developer": delegate_task_to_developer,
+    "assign_task_to_virtual_assistant": assign_task_to_virtual_assistant,
 }
