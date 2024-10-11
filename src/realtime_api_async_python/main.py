@@ -1,23 +1,25 @@
 import asyncio
 import functools
-import openai
-from pydantic import BaseModel
-import websockets
-from websockets.exceptions import ConnectionClosedError
-import os
 import json
+import logging
+import os
+import sys
+import time
+import webbrowser
 import base64
-from dotenv import load_dotenv
+import random
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from enum import Enum
+from typing import Optional
+
+import openai
 import pyaudio
 import queue
-import logging
-import time
-import sys
-from datetime import datetime
-import random
-import webbrowser
-from concurrent.futures import ThreadPoolExecutor
-from enum import Enum
+import websockets
+from dotenv import load_dotenv
+from pydantic import BaseModel
+from websockets.exceptions import ConnectionClosedError
 
 # Constants
 PREFIX_PADDING_MS = 300
@@ -40,38 +42,39 @@ logging.basicConfig(
 )
 
 # Load personalization settings
-with open(os.getenv("PERSONALIZATION_FILE", "./personalization.json"), "r") as f:
+PERSONALIZATION_FILE = os.getenv("PERSONALIZATION_FILE", "./personalization.json")
+with open(PERSONALIZATION_FILE, "r") as f:
     personalization = json.load(f)
 
-ai_assistant_name = personalization.get("ai_assistant_name", "Assistant")
-human_name = personalization.get("human_name", "User")
+AI_ASSISTANT_NAME = personalization.get("ai_assistant_name", "Assistant")
+HUMAN_NAME = personalization.get("human_name", "User")
 
-SESSION_INSTRUCTIONS = f"You are {ai_assistant_name}, a helpful assistant. Respond concisely to {human_name}."
+SESSION_INSTRUCTIONS = f"You are {AI_ASSISTANT_NAME}, a helpful assistant. Respond concisely to {HUMAN_NAME}."
 
 # Check for required environment variables
-required_env_vars = ["OPENAI_API_KEY", "PERSONALIZATION_FILE", "SCRATCH_PAD_DIR"]
-missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-if missing_vars:
-    logging.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+REQUIRED_ENV_VARS = ["OPENAI_API_KEY", "PERSONALIZATION_FILE", "SCRATCH_PAD_DIR"]
+MISSING_VARS = [var for var in REQUIRED_ENV_VARS if not os.getenv(var)]
+if MISSING_VARS:
+    logging.error(f"Missing required environment variables: {', '.join(MISSING_VARS)}")
     logging.error("Please set these variables in your .env file.")
     sys.exit(1)
 
-scratch_pad_dir = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
-os.makedirs(scratch_pad_dir, exist_ok=True)
+SCRATCH_PAD_DIR = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
+os.makedirs(SCRATCH_PAD_DIR, exist_ok=True)
 
 
 class ModelName(str, Enum):
-    state_of_the_art_model = "state_of_the_art_model"
-    reasoning_model = "reasoning_model"
-    base_model = "base_model"
-    fast_model = "fast_model"
+    STATE_OF_THE_ART_MODEL = "state_of_the_art_model"
+    REASONING_MODEL = "reasoning_model"
+    BASE_MODEL = "base_model"
+    FAST_MODEL = "fast_model"
 
 
-model_name_to_id = {
-    ModelName.state_of_the_art_model: "o1-preview",
-    ModelName.reasoning_model: "o1-mini",
-    ModelName.base_model: "gpt-4o-2024-08-06",
-    ModelName.fast_model: "gpt-4o-mini",
+MODEL_NAME_TO_ID = {
+    ModelName.STATE_OF_THE_ART_MODEL: "o1-preview",
+    ModelName.REASONING_MODEL: "o1-mini",
+    ModelName.BASE_MODEL: "gpt-4o-2024-08-06",
+    ModelName.FAST_MODEL: "gpt-4o-mini",
 }
 
 
@@ -80,8 +83,7 @@ def timeit_decorator(func):
     async def async_wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         result = await func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = round(end_time - start_time, 4)
+        duration = round(time.perf_counter() - start_time, 4)
         log_runtime(func.__name__, duration)
         return result
 
@@ -89,8 +91,7 @@ def timeit_decorator(func):
     def sync_wrapper(*args, **kwargs):
         start_time = time.perf_counter()
         result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = round(end_time - start_time, 4)
+        duration = round(time.perf_counter() - start_time, 4)
         log_runtime(func.__name__, duration)
         return result
 
@@ -98,12 +99,12 @@ def timeit_decorator(func):
 
 
 @timeit_decorator
-async def get_current_time():
+async def get_current_time() -> dict:
     return {"current_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
 
 @timeit_decorator
-async def get_random_number():
+async def get_random_number() -> dict:
     return {"random_number": random.randint(1, 100)}
 
 
@@ -118,7 +119,7 @@ class CreateFileResponse(BaseModel):
 
 class FileSelectionResponse(BaseModel):
     file: str
-    model: ModelName = ModelName.base_model
+    model: ModelName = ModelName.BASE_MODEL
 
 
 class FileUpdateResponse(BaseModel):
@@ -131,7 +132,7 @@ class FileDeleteResponse(BaseModel):
 
 
 @timeit_decorator
-async def open_browser(prompt: str):
+async def open_browser(prompt: str) -> dict:
     browser_urls = personalization.get("browser_urls", [])
     browser = personalization.get("browser", "chrome")
     prompt_structure = f"""
@@ -159,13 +160,12 @@ async def open_browser(prompt: str):
         with ThreadPoolExecutor() as pool:
             await loop.run_in_executor(pool, webbrowser.get(browser).open, response.url)
         return {"status": "Browser opened", "url": response.url}
-    else:
-        return {"status": "No URL found"}
+    return {"status": "No URL found"}
 
 
 @timeit_decorator
 async def create_file(file_name: str, prompt: str) -> dict:
-    file_path = os.path.join(scratch_pad_dir, file_name)
+    file_path = os.path.join(SCRATCH_PAD_DIR, file_name)
     if os.path.exists(file_path):
         return {"status": "file already exists"}
 
@@ -196,24 +196,24 @@ async def create_file(file_name: str, prompt: str) -> dict:
 
 @timeit_decorator
 async def delete_file(prompt: str, force_delete: bool = False) -> dict:
-    available_files = os.listdir(scratch_pad_dir)
+    available_files = os.listdir(SCRATCH_PAD_DIR)
     select_file_prompt = f"""
-    <purpose>
-        Select a file from the available files to delete.
-    </purpose>
+<purpose>
+    Select a file from the available files to delete.
+</purpose>
 
-    <instructions>
-        <instruction>Based on the user's prompt and the list of available files, infer which file the user wants to delete.</instruction>
-        <instruction>If no file matches, return an empty string for 'file'.</instruction>
-    </instructions>
+<instructions>
+    <instruction>Based on the user's prompt and the list of available files, infer which file the user wants to delete.</instruction>
+    <instruction>If no file matches, return an empty string for 'file'.</instruction>
+</instructions>
 
-    <available-files>
-        {", ".join(available_files)}
-    </available-files>
+<available-files>
+    {", ".join(available_files)}
+</available-files>
 
-    <user-prompt>
-        {prompt}
-    </user-prompt>
+<user-prompt>
+    {prompt}
+</user-prompt>
     """
     file_delete_response = structured_output_prompt(
         select_file_prompt, FileDeleteResponse
@@ -222,7 +222,7 @@ async def delete_file(prompt: str, force_delete: bool = False) -> dict:
     if not file_delete_response.file:
         return {"status": "No matching file found"}
 
-    file_path = os.path.join(scratch_pad_dir, file_delete_response.file)
+    file_path = os.path.join(SCRATCH_PAD_DIR, file_delete_response.file)
     if not os.path.exists(file_path):
         return {"status": "File does not exist", "file_name": file_delete_response.file}
 
@@ -238,10 +238,10 @@ async def delete_file(prompt: str, force_delete: bool = False) -> dict:
 
 
 @timeit_decorator
-async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> dict:
-    available_files = os.listdir(scratch_pad_dir)
+async def update_file(prompt: str, model: ModelName = ModelName.BASE_MODEL) -> dict:
+    available_files = os.listdir(SCRATCH_PAD_DIR)
     available_model_map = json.dumps(
-        {model.value: model_name_to_id[model] for model in ModelName}
+        {model.value: MODEL_NAME_TO_ID[model] for model in ModelName}
     )
 
     select_file_prompt = f"""
@@ -267,7 +267,7 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
 <user-prompt>
     {prompt}
 </user-prompt>
-"""
+    """
     file_selection_response = structured_output_prompt(
         select_file_prompt, FileSelectionResponse
     )
@@ -276,10 +276,10 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
         return {"status": "No matching file found"}
 
     selected_file = file_selection_response.file
-    selected_model = model_name_to_id.get(
-        file_selection_response.model, model_name_to_id[ModelName.base_model]
+    selected_model = MODEL_NAME_TO_ID.get(
+        file_selection_response.model, MODEL_NAME_TO_ID[ModelName.BASE_MODEL]
     )
-    file_path = os.path.join(scratch_pad_dir, selected_file)
+    file_path = os.path.join(SCRATCH_PAD_DIR, selected_file)
 
     with open(file_path, "r") as f:
         file_content = f.read()
@@ -309,7 +309,7 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
 <user-prompt>
     {prompt}
 </user-prompt>
-"""
+    """
     file_update_response = chat_prompt(update_file_prompt, selected_model)
 
     with open(file_path, "w") as f:
@@ -322,7 +322,7 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
     }
 
 
-function_map = {
+FUNCTION_MAP = {
     "get_current_time": get_current_time,
     "get_random_number": get_random_number,
     "open_browser": open_browser,
@@ -332,7 +332,7 @@ function_map = {
 }
 
 
-def log_ws_event(direction, event):
+def log_ws_event(direction: str, event: dict):
     event_type = event.get("type", "Unknown")
     event_emojis = {
         "session.update": "🛠️",
@@ -368,7 +368,7 @@ def log_ws_event(direction, event):
         "conversation.item.input_audio_transcription.failed": "⚠️",
     }
     emoji = event_emojis.get(event_type, "❓")
-    icon = "⬆️ - Out" if direction == "outgoing" else "⬇️ - In"
+    icon = "⬆️ - Out" if direction.lower() == "outgoing" else "⬇️ - In"
     logging.info(f"{emoji} {icon} {event_type}")
 
 
@@ -432,7 +432,7 @@ class AsyncMicrophone:
         self.is_receiving = False
         logging.info("Stopped receiving assistant response")
 
-    def get_audio_data(self):
+    def get_audio_data(self) -> Optional[bytes]:
         data = b""
         while not self.queue.empty():
             data += self.queue.get()
@@ -445,18 +445,17 @@ class AsyncMicrophone:
         logging.info("AsyncMicrophone closed")
 
 
-def base64_encode_audio(audio_bytes):
+def base64_encode_audio(audio_bytes: bytes) -> str:
     return base64.b64encode(audio_bytes).decode("utf-8")
 
 
 def log_runtime(function_or_name: str, duration: float):
-    jsonl_file = RUN_TIME_TABLE_LOG_JSON
     time_record = {
         "timestamp": datetime.now().isoformat(),
         "function": function_or_name,
         "duration": f"{duration:.4f}",
     }
-    with open(jsonl_file, "a") as file:
+    with open(RUN_TIME_TABLE_LOG_JSON, "a") as file:
         json.dump(time_record, file)
         file.write("\n")
 
@@ -601,7 +600,7 @@ async def realtime_api():
                         ],
                     },
                 }
-                log_ws_event("Outgoing", session_update)
+                log_ws_event("outgoing", session_update)
                 await websocket.send(json.dumps(session_update))
 
                 async def process_ws_messages():
@@ -615,24 +614,20 @@ async def realtime_api():
                         try:
                             message = await websocket.recv()
                             event = json.loads(message)
-                            log_ws_event("Incoming", event)
+                            log_ws_event("incoming", event)
 
-                            if event["type"] == "response.created":
+                            event_type = event.get("type")
+
+                            if event_type == "response.created":
                                 mic.start_receiving()
-                            elif event["type"] == "response.output_item.added":
+                            elif event_type == "response.output_item.added":
                                 item = event.get("item", {})
                                 if item.get("type") == "function_call":
                                     function_call = item
                                     function_call_args = ""
-                            elif (
-                                event["type"]
-                                == "response.function_call_arguments.delta"
-                            ):
-                                delta = event.get("delta", "")
-                                function_call_args += delta
-                            elif (
-                                event["type"] == "response.function_call_arguments.done"
-                            ):
+                            elif event_type == "response.function_call_arguments.delta":
+                                function_call_args += event.get("delta", "")
+                            elif event_type == "response.function_call_arguments.done":
                                 if function_call:
                                     function_name = function_call.get("name")
                                     call_id = function_call.get("call_id")
@@ -640,20 +635,17 @@ async def realtime_api():
                                         args = (
                                             json.loads(function_call_args)
                                             if function_call_args
-                                            else None
+                                            else {}
                                         )
                                     except json.JSONDecodeError:
-                                        args = None
-                                    if function_name in function_map:
+                                        args = {}
+                                    if function_name in FUNCTION_MAP:
                                         logging.info(
                                             f"🛠️ Calling function: {function_name} with args: {args}"
                                         )
-                                        if args:
-                                            result = await function_map[function_name](
-                                                **args
-                                            )
-                                        else:
-                                            result = await function_map[function_name]()
+                                        result = await FUNCTION_MAP[function_name](
+                                            **args
+                                        )
                                         logging.info(
                                             f"🛠️ Function call result: {result}"
                                         )
@@ -669,7 +661,7 @@ async def realtime_api():
                                             "output": json.dumps(result),
                                         },
                                     }
-                                    log_ws_event("Outgoing", function_call_output)
+                                    log_ws_event("outgoing", function_call_output)
                                     await websocket.send(
                                         json.dumps(function_call_output)
                                     )
@@ -678,21 +670,19 @@ async def realtime_api():
                                     )
                                     function_call = None
                                     function_call_args = ""
-
-                            elif event["type"] == "response.text.delta":
+                            elif event_type == "response.text.delta":
                                 assistant_reply += event.get("delta", "")
                                 print(
                                     f"Assistant: {event.get('delta', '')}",
                                     end="",
                                     flush=True,
                                 )
-                            elif event["type"] == "response.audio.delta":
+                            elif event_type == "response.audio.delta":
                                 audio_chunks.append(base64.b64decode(event["delta"]))
-                            elif event["type"] == "response.done":
+                            elif event_type == "response.done":
                                 if response_start_time is not None:
-                                    response_end_time = time.perf_counter()
                                     response_duration = (
-                                        response_end_time - response_start_time
+                                        time.perf_counter() - response_start_time
                                     )
                                     log_runtime(
                                         "realtime_api_response", response_duration
@@ -711,13 +701,12 @@ async def realtime_api():
                                 audio_chunks = []
                                 logging.info("Calling stop_receiving()")
                                 mic.stop_receiving()
-                            elif event["type"] == "rate_limits.updated":
+                            elif event_type == "rate_limits.updated":
                                 mic.is_recording = True
                                 logging.info(
                                     "Resumed recording after rate_limits.updated"
                                 )
-                                pass
-                            elif event["type"] == "error":
+                            elif event_type == "error":
                                 error_message = event.get("error", {}).get(
                                     "message", ""
                                 )
@@ -738,12 +727,11 @@ async def realtime_api():
                                 else:
                                     logging.error(f"Unhandled error: {error_message}")
                                     break
-                            elif event["type"] == "input_audio_buffer.speech_started":
+                            elif event_type == "input_audio_buffer.speech_started":
                                 logging.info("Speech detected, listening...")
-                            elif event["type"] == "input_audio_buffer.speech_stopped":
+                            elif event_type == "input_audio_buffer.speech_stopped":
                                 mic.stop_recording()
                                 logging.info("Speech ended, processing...")
-                                # await asyncio.sleep(0.5)
 
                                 # start the response timer, on send
                                 response_start_time = time.perf_counter()
@@ -770,21 +758,17 @@ async def realtime_api():
                         )  # Small delay to accumulate some audio data
                         if not mic.is_receiving:
                             audio_data = mic.get_audio_data()
-                            if audio_data and len(audio_data) > 0:
+                            if audio_data:
                                 base64_audio = base64_encode_audio(audio_data)
                                 if base64_audio:
                                     audio_event = {
                                         "type": "input_audio_buffer.append",
                                         "audio": base64_audio,
                                     }
-                                    log_ws_event("Outgoing", audio_event)
+                                    log_ws_event("outgoing", audio_event)
                                     await websocket.send(json.dumps(audio_event))
                                 else:
                                     logging.debug("No audio data to send")
-                        else:
-                            await asyncio.sleep(
-                                0.1
-                            )  # Wait while receiving assistant response
                 except KeyboardInterrupt:
                     logging.info("Keyboard interrupt received. Closing the connection.")
                 finally:
@@ -805,9 +789,8 @@ async def realtime_api():
                 )
                 await asyncio.sleep(1)  # Wait before reconnecting
                 continue  # Retry the connection
-            else:
-                logging.exception("WebSocket connection closed unexpectedly.")
-                break  # Exit the loop on other connection errors
+            logging.exception("WebSocket connection closed unexpectedly.")
+            break  # Exit the loop on other connection errors
         except Exception as e:
             logging.exception(f"An unexpected error occurred: {e}")
             break  # Exit the loop on unexpected exceptions
@@ -819,12 +802,12 @@ async def realtime_api():
                 await websocket.close()
 
 
-async def play_audio(audio_data):
+async def play_audio(audio_data: bytes):
     p = pyaudio.PyAudio()
     stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True)
     stream.write(audio_data)
 
-    # Add a small delay (e.g., 100ms) of silence at the end to prevent popping, and weird cuts off sounds
+    # Add a small delay (e.g., 200ms) of silence at the end to prevent popping and abrupt cuts
     silence_duration = 0.2  # 200ms
     silence_frames = int(RATE * silence_duration)
     silence = b"\x00" * (
@@ -832,7 +815,7 @@ async def play_audio(audio_data):
     )  # 2 bytes per sample for 16-bit audio
     stream.write(silence)
 
-    # Add a small pause before closing the stream to make sure the audio is fully played
+    # Add a small pause before closing the stream to ensure audio is fully played
     await asyncio.sleep(0.5)
 
     stream.stop_stream()
