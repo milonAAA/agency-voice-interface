@@ -23,9 +23,9 @@ with open(PERSONALIZATION_FILE, "r") as f:
     personalization = json.load(f)
 
 AI_ASSISTANT_NAME = personalization.get("ai_assistant_name", "Assistant")
-HUMAN_NAME = personalization.get("human_name", "User")
+USER_NAME = personalization.get("user_name", "User")
 
-SESSION_INSTRUCTIONS = f"You are {AI_ASSISTANT_NAME}, a helpful assistant. Respond concisely to {HUMAN_NAME}."
+SESSION_INSTRUCTIONS = f"You are {AI_ASSISTANT_NAME}, a helpful assistant. Respond concisely to {USER_NAME}."
 
 # Check for required environment variables
 REQUIRED_ENV_VARS = ["OPENAI_API_KEY", "PERSONALIZATION_FILE", "SCRATCH_PAD_DIR"]
