@@ -42,14 +42,28 @@ async def process_ws_messages(websocket, mic):
                             json.loads(function_call_args) if function_call_args else {}
                         )
                     except json.JSONDecodeError:
+                        logging.error(
+                            f"Failed to parse function arguments: {function_call_args}"
+                        )
                         args = {}
                     if function_name in FUNCTION_MAP:
                         logging.info(
                             f"🛠️ Calling function: {function_name} with args: {args}"
                         )
-                        result = await FUNCTION_MAP[function_name](**args)
-                        logging.info(f"🛠️ Function call result: {result}")
+                        try:
+                            result = await FUNCTION_MAP[function_name](**args)
+                            logging.info(f"🛠️ Function call result: {result}")
+                        except Exception as e:
+                            logging.error(
+                                f"Error calling function {function_name}: {str(e)}"
+                            )
+                            result = {
+                                "error": f"Function '{function_name}' failed: {str(e)}"
+                            }
                     else:
+                        logging.warning(
+                            f"Function '{function_name}' not found in FUNCTION_MAP"
+                        )
                         result = {"error": f"Function '{function_name}' not found."}
                     function_call_output = {
                         "type": "conversation.item.create",

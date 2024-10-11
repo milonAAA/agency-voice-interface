@@ -227,6 +227,10 @@ async def realtime_api():
                                     logging.debug("No audio data to send")
                 except KeyboardInterrupt:
                     logging.info("Keyboard interrupt received. Closing the connection.")
+                except Exception as e:
+                    logging.exception(
+                        f"An unexpected error occurred in the main loop: {e}"
+                    )
                 finally:
                     exit_event.set()
                     mic.stop_recording()
@@ -234,7 +238,10 @@ async def realtime_api():
                     await websocket.close()
 
                 # Wait for the WebSocket processing task to complete
-                await ws_task
+                try:
+                    await ws_task
+                except Exception as e:
+                    logging.exception(f"Error in WebSocket processing task: {e}")
 
             # If execution reaches here without exceptions, exit the loop
             break
