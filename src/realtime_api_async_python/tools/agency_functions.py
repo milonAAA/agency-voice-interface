@@ -8,7 +8,7 @@ class Developer(Agent):
             name="Developer",
             description="An expert software developer capable of writing, reviewing, and debugging code.",
             instructions="You are a skilled programmer. Your task is to write clean, efficient code, review existing code for improvements, and help debug issues.",
-            tools=[],  # Add any specific tools for the Developer if needed
+            tools=[],
         )
 
 
@@ -19,7 +19,7 @@ class VirtualAssistant(Agent):
             name="VirtualAssistant",
             description="A helpful virtual assistant capable of handling various tasks and queries.",
             instructions="You are a versatile virtual assistant. Your role is to assist with general queries, provide information, and help manage tasks.",
-            tools=[],  # Add any specific tools for the VirtualAssistant if needed
+            tools=[],
         )
 
 

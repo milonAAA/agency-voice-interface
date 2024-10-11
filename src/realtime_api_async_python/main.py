@@ -19,7 +19,7 @@ from realtime_api_async_python.utils import (
     log_ws_event,
     base64_encode_audio,
 )
-from realtime_api_async_python.websocket_handler import process_ws_messages
+from realtime_api_async_python.websocket_handler import TOOLS, process_ws_messages
 from realtime_api_async_python.visual_interface import (
     VisualInterface,
     run_visual_interface,
@@ -71,136 +71,7 @@ async def realtime_api():
                             "prefix_padding_ms": PREFIX_PADDING_MS,
                             "silence_duration_ms": SILENCE_DURATION_MS,
                         },
-                        "tools": [
-                            {
-                                "type": "function",
-                                "name": "get_current_time",
-                                "description": "Returns the current time.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {},
-                                    "required": [],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "get_random_number",
-                                "description": "Returns a random number between 1 and 100.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {},
-                                    "required": [],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "open_browser",
-                                "description": "Opens a browser tab with the best-fitting URL based on the user's prompt.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "prompt": {
-                                            "type": "string",
-                                            "description": "The user's prompt to determine which URL to open.",
-                                        },
-                                    },
-                                    "required": ["prompt"],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "create_file",
-                                "description": "Generates content for a new file based on the user's prompt and file name.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "file_name": {
-                                            "type": "string",
-                                            "description": "The name of the file to create.",
-                                        },
-                                        "prompt": {
-                                            "type": "string",
-                                            "description": "The user's prompt to generate the file content.",
-                                        },
-                                    },
-                                    "required": ["file_name", "prompt"],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "update_file",
-                                "description": "Updates a file based on the user's prompt.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "prompt": {
-                                            "type": "string",
-                                            "description": "The user's prompt describing the updates to the file.",
-                                        },
-                                        "model": {
-                                            "type": "string",
-                                            "enum": [
-                                                "state_of_the_art_model",
-                                                "reasoning_model",
-                                                "base_model",
-                                                "fast_model",
-                                            ],
-                                            "description": "The model to use for generating the updates. Default to 'base_model' if not specified.",
-                                        },
-                                    },
-                                    "required": ["prompt"],  # 'model' is optional
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "delete_file",
-                                "description": "Deletes a file based on the user's prompt.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "prompt": {
-                                            "type": "string",
-                                            "description": "The user's prompt describing the file to delete.",
-                                        },
-                                        "force_delete": {
-                                            "type": "boolean",
-                                            "description": "Whether to force delete the file without confirmation. Default to 'false' if not specified.",
-                                        },
-                                    },
-                                    "required": ["prompt"],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "delegate_task_to_developer",
-                                "description": "Delegates a task to the Developer agent in the Agency Swarm.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "task_description": {
-                                            "type": "string",
-                                            "description": "Description of the task to delegate.",
-                                        },
-                                    },
-                                    "required": ["task_description"],
-                                },
-                            },
-                            {
-                                "type": "function",
-                                "name": "assign_task_to_virtual_assistant",
-                                "description": "Assigns a task to the Virtual Assistant agent in the Agency Swarm.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "task_description": {
-                                            "type": "string",
-                                            "description": "Description of the task to assign.",
-                                        },
-                                    },
-                                    "required": ["task_description"],
-                                },
-                            },
-                        ],
+                        "tools": [tool.openai_schema for tool in TOOLS],
                     },
                 }
                 log_ws_event("outgoing", session_update)

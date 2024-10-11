@@ -29,24 +29,21 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 Once the assistant is running, you can interact with it using voice commands. Here are some example interactions:
 
 1. "What's the current time?"
-2. "Generate a random number."
-3. "Open ChatGPT in the browser."
-4. "Create a new file called user_data.txt with some sample content."
-5. "Update the user_data.txt file, add more information."
-6. "Delete the user_data.txt file."
+2. "Open ChatGPT in the browser."
+3. "Create a new file called user_data.txt with some sample content."
+4. "Update the user_data.txt file, add more information."
+5. "Delete the user_data.txt file."
 
 ## Code Structure
 
 ### Main Components
 
 - `main.py`: Entry point of the application, sets up the WebSocket connection and manages the main event loop.
-- `functions.py`: Contains definitions for various functions that can be called by the AI assistant.
+- `tools/`: Contains custom tools for the assistant.
 - `models.py`: Defines Pydantic models for structured data handling.
 - `config.py`: Manages configuration settings and environment variables.
-- `utils.py`: Provides utility functions for logging, encoding, and prompting.
 - `visual_interface.py`: Implements a visual interface for audio energy visualization.
 - `websocket_handler.py`: Handles WebSocket events and message processing.
-- `agency_functions.py`: Defines virtual agents for task delegation.
 
 ### Key Features
 
@@ -57,16 +54,13 @@ Once the assistant is running, you can interact with it using voice commands. He
    The `AsyncMicrophone` class manages real-time audio capture, while the `play_audio` function handles audio playback.
 
 3. **Function Execution**:
-   Custom functions are defined in `functions.py` and can be called by the AI assistant based on user requests.
+   Custom functions are defined in `tools/` and can be called by the AI assistant based on user requests.
 
 4. **Structured Output Processing**:
    The application uses Pydantic models to handle structured data responses from the AI.
 
 5. **Visual Interface**:
    A PyGame-based visual interface provides real-time visualization of current audio volume.
-
-6. **Agency Functions**:
-   The project includes a basic implementation of AI agents for task delegation.
 
 
 ## Configuration

@@ -5,9 +5,14 @@ import base64
 import time
 import websockets
 import numpy as np
-from realtime_api_async_python.functions import FUNCTION_MAP
+from agency_swarm.tools import BaseTool
+
+from realtime_api_async_python.tools import load_tools
 from realtime_api_async_python.utils import log_ws_event, log_runtime
 from realtime_api_async_python.audio import play_audio
+
+# Load all tools
+TOOLS: list[BaseTool] = load_tools()
 
 
 async def process_ws_messages(websocket, mic, visual_interface):
@@ -48,12 +53,22 @@ async def process_ws_messages(websocket, mic, visual_interface):
                             f"Failed to parse function arguments: {function_call_args}"
                         )
                         args = {}
-                    if function_name in FUNCTION_MAP:
+
+                    tool = next(
+                        (
+                            t
+                            for t in TOOLS
+                            if t.__name__.lower() == function_name.lower()
+                        ),
+                        None,
+                    )
+                    if tool:
                         logging.info(
                             f"🛠️ Calling function: {function_name} with args: {args}"
                         )
                         try:
-                            result = await FUNCTION_MAP[function_name](**args)
+                            tool_instance = tool(**args)
+                            result = await tool_instance.run()
                             logging.info(f"🛠️ Function call result: {result}")
                         except Exception as e:
                             logging.error(
@@ -64,9 +79,10 @@ async def process_ws_messages(websocket, mic, visual_interface):
                             }
                     else:
                         logging.warning(
-                            f"Function '{function_name}' not found in FUNCTION_MAP"
+                            f"Function '{function_name}' not found in TOOLS"
                         )
                         result = {"error": f"Function '{function_name}' not found."}
+
                     function_call_output = {
                         "type": "conversation.item.create",
                         "item": {

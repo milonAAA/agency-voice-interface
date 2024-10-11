@@ -2,10 +2,7 @@
 import base64
 import json
 import logging
-import os
 from datetime import datetime
-from pydantic import BaseModel
-import openai
 from realtime_api_async_python.config import RUN_TIME_TABLE_LOG_JSON
 
 
@@ -64,25 +61,3 @@ def log_ws_event(direction: str, event: dict):
     emoji = event_emojis.get(event_type, "❓")
     icon = "⬆️ - Out" if direction.lower() == "outgoing" else "⬇️ - In"
     logging.info(f"{emoji} {icon} {event_type}")
-
-
-def structured_output_prompt(prompt: str, response_format: BaseModel) -> BaseModel:
-    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    completion = client.beta.chat.completions.parse(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        response_format=response_format,
-    )
-    message = completion.choices[0].message
-    if not message.parsed:
-        raise ValueError(message.refusal)
-    return message.parsed
-
-
-def chat_prompt(prompt: str, model: str) -> str:
-    client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    completion = client.beta.chat.completions.parse(
-        model=model,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return completion.choices[0].message.content
