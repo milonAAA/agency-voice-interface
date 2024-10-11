@@ -4,12 +4,13 @@ import logging
 import base64
 import time
 import websockets
+import numpy as np
 from realtime_api_async_python.functions import FUNCTION_MAP
 from realtime_api_async_python.utils import log_ws_event, log_runtime
 from realtime_api_async_python.audio import play_audio
 
 
-async def process_ws_messages(websocket, mic):
+async def process_ws_messages(websocket, mic, visual_interface):
     assistant_reply = ""
     audio_chunks = []
     function_call = None
@@ -26,6 +27,7 @@ async def process_ws_messages(websocket, mic):
 
             if event_type == "response.created":
                 mic.start_receiving()
+                visual_interface.set_active(True)
             elif event_type == "response.output_item.added":
                 item = event.get("item", {})
                 if item.get("type") == "function_call":
@@ -86,7 +88,11 @@ async def process_ws_messages(websocket, mic):
                     flush=True,
                 )
             elif event_type == "response.audio.delta":
-                audio_chunks.append(base64.b64decode(event["delta"]))
+                audio_chunk = base64.b64decode(event["delta"])
+                audio_chunks.append(audio_chunk)
+                # Update energy for visualization
+                audio_frame = np.frombuffer(audio_chunk, dtype=np.int16)
+                visual_interface.update_energy(audio_frame)
             elif event_type == "response.done":
                 if response_start_time is not None:
                     response_duration = time.perf_counter() - response_start_time
@@ -99,12 +105,17 @@ async def process_ws_messages(websocket, mic):
                     logging.info(
                         f"Sending {len(audio_data)} bytes of audio data to play_audio()"
                     )
-                    await play_audio(audio_data)
+                    # Before playing audio
+                    visual_interface.set_assistant_speaking(True)
+                    await play_audio(audio_data, visual_interface)
+                    # After playing audio
+                    visual_interface.set_assistant_speaking(False)
                     logging.info("Finished play_audio()")
                 assistant_reply = ""
                 audio_chunks = []
                 logging.info("Calling stop_receiving()")
                 mic.stop_receiving()
+                visual_interface.set_active(False)
             elif event_type == "rate_limits.updated":
                 mic.is_recording = True
                 logging.info("Resumed recording after rate_limits.updated")
@@ -126,14 +137,14 @@ async def process_ws_messages(websocket, mic):
                     break
             elif event_type == "input_audio_buffer.speech_started":
                 logging.info("Speech detected, listening...")
+                visual_interface.set_active(True)
             elif event_type == "input_audio_buffer.speech_stopped":
                 mic.stop_recording()
                 logging.info("Speech ended, processing...")
+                visual_interface.set_active(False)
 
-                # start the response timer, on send
                 response_start_time = time.perf_counter()
                 await websocket.send(json.dumps({"type": "input_audio_buffer.commit"}))
-
         except websockets.ConnectionClosed:
             logging.warning("WebSocket connection closed")
             break

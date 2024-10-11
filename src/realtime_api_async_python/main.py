@@ -5,6 +5,8 @@ import logging
 import os
 import websockets
 from websockets.exceptions import ConnectionClosedError
+import pygame
+import numpy as np
 
 from realtime_api_async_python.config import (
     SESSION_INSTRUCTIONS,
@@ -18,6 +20,10 @@ from realtime_api_async_python.utils import (
     base64_encode_audio,
 )
 from realtime_api_async_python.websocket_handler import process_ws_messages
+from realtime_api_async_python.visual_interface import (
+    VisualInterface,
+    run_visual_interface,
+)
 
 
 # Set up logging
@@ -45,6 +51,7 @@ async def realtime_api():
             }
 
             mic = AsyncMicrophone()
+            visual_interface = VisualInterface()
 
             async with websockets.connect(url, extra_headers=headers) as websocket:
                 logging.info("Connected to the server.")
@@ -199,7 +206,12 @@ async def realtime_api():
                 log_ws_event("outgoing", session_update)
                 await websocket.send(json.dumps(session_update))
 
-                ws_task = asyncio.create_task(process_ws_messages(websocket, mic))
+                ws_task = asyncio.create_task(
+                    process_ws_messages(websocket, mic, visual_interface)
+                )
+                visual_task = asyncio.create_task(
+                    run_visual_interface(visual_interface)
+                )
 
                 logging.info(
                     "Conversation started. Speak freely, and the assistant will respond."
@@ -223,6 +235,12 @@ async def realtime_api():
                                     }
                                     log_ws_event("outgoing", audio_event)
                                     await websocket.send(json.dumps(audio_event))
+                                    # Update energy for visualization
+                                    audio_frame = np.frombuffer(
+                                        audio_data, dtype=np.int16
+                                    )
+                                    energy = np.abs(audio_frame).mean()
+                                    visual_interface.update_energy(energy)
                                 else:
                                     logging.debug("No audio data to send")
                 except KeyboardInterrupt:
@@ -236,10 +254,12 @@ async def realtime_api():
                     mic.stop_recording()
                     mic.close()
                     await websocket.close()
+                    visual_interface.set_active(False)
 
                 # Wait for the WebSocket processing task to complete
                 try:
                     await ws_task
+                    await visual_task
                 except Exception as e:
                     logging.exception(f"Error in WebSocket processing task: {e}")
 
@@ -263,6 +283,7 @@ async def realtime_api():
                 mic.close()
             if "websocket" in locals():
                 await websocket.close()
+            pygame.quit()
 
 
 async def main_async():

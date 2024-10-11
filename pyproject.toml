@@ -9,6 +9,7 @@ dependencies = [
     "numpy",
     "openai",
     "pyaudio",
+    "pygame>=2.6.1",
     "websockets",
 ]
 
