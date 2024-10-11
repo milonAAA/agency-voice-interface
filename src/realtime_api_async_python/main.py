@@ -14,87 +14,23 @@ import logging
 import time
 import sys
 from datetime import datetime
-
-# Add these imports for the functions
 import random
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum
 
-# Constants for turn detection
+# Constants
 PREFIX_PADDING_MS = 300
 SILENCE_THRESHOLD = 0.5
 SILENCE_DURATION_MS = 400
-
 RUN_TIME_TABLE_LOG_JSON = "runtime_time_table.jsonl"
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 24000
 
-
-def timeit_decorator(func):
-    @functools.wraps(func)
-    async def async_wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = await func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = round(end_time - start_time, 4)
-        print(f"⏰ {func.__name__}() took {duration:.4f} seconds")
-
-        jsonl_file = RUN_TIME_TABLE_LOG_JSON
-
-        # Create new time record
-        time_record = {
-            "timestamp": datetime.now().isoformat(),
-            "function": func.__name__,
-            "duration": f"{duration:.4f}",
-        }
-
-        # Append the new record to the JSONL file
-        with open(jsonl_file, "a") as file:
-            json.dump(time_record, file)
-            file.write("\n")
-
-        return result
-
-    @functools.wraps(func)
-    def sync_wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = round(end_time - start_time, 4)
-        print(f"⏰ {func.__name__}() took {duration:.4f} seconds")
-
-        jsonl_file = RUN_TIME_TABLE_LOG_JSON
-
-        # Create new time record
-        time_record = {
-            "timestamp": datetime.now().isoformat(),
-            "function": func.__name__,
-            "duration": f"{duration:.4f}",
-        }
-
-        # Append the new record to the JSONL file
-        with open(jsonl_file, "a") as file:
-            json.dump(time_record, file)
-            file.write("\n")
-
-        return result
-
-    return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
-
-
-class ModelName(str, Enum):
-    state_of_the_art_model = "state_of_the_art_model"
-    reasoning_model = "reasoning_model"
-    base_model = "base_model"
-    fast_model = "fast_model"
-
-
-# Mapping from enum options to model IDs
-model_name_to_id = {
-    ModelName.state_of_the_art_model: "o1-preview",
-    ModelName.reasoning_model: "o1-mini",
-    ModelName.base_model: "gpt-4o-2024-08-06",
-    ModelName.fast_model: "gpt-4o-mini",
-}
+# Load environment variables
+load_dotenv()
 
 # Set up logging
 logging.basicConfig(
@@ -103,19 +39,13 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
-# Load environment variables
-load_dotenv()
-
 # Load personalization settings
-personalization_file = os.getenv("PERSONALIZATION_FILE", "./personalization.json")
-with open(personalization_file, "r") as f:
+with open(os.getenv("PERSONALIZATION_FILE", "./personalization.json"), "r") as f:
     personalization = json.load(f)
 
-# Extract names from personalization
 ai_assistant_name = personalization.get("ai_assistant_name", "Assistant")
 human_name = personalization.get("human_name", "User")
 
-# Define session instructions constant
 SESSION_INSTRUCTIONS = f"You are {ai_assistant_name}, a helpful assistant. Respond concisely to {human_name}."
 
 # Check for required environment variables
@@ -127,12 +57,46 @@ if missing_vars:
     sys.exit(1)
 
 scratch_pad_dir = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
-
-# Ensure the scratch pad directory exists
 os.makedirs(scratch_pad_dir, exist_ok=True)
 
 
-# Define the functions to be called
+class ModelName(str, Enum):
+    state_of_the_art_model = "state_of_the_art_model"
+    reasoning_model = "reasoning_model"
+    base_model = "base_model"
+    fast_model = "fast_model"
+
+
+model_name_to_id = {
+    ModelName.state_of_the_art_model: "o1-preview",
+    ModelName.reasoning_model: "o1-mini",
+    ModelName.base_model: "gpt-4o-2024-08-06",
+    ModelName.fast_model: "gpt-4o-mini",
+}
+
+
+def timeit_decorator(func):
+    @functools.wraps(func)
+    async def async_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = await func(*args, **kwargs)
+        end_time = time.perf_counter()
+        duration = round(end_time - start_time, 4)
+        log_runtime(func.__name__, duration)
+        return result
+
+    @functools.wraps(func)
+    def sync_wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        duration = round(end_time - start_time, 4)
+        log_runtime(func.__name__, duration)
+        return result
+
+    return async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
+
+
 @timeit_decorator
 async def get_current_time():
     return {"current_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
@@ -168,18 +132,8 @@ class FileDeleteResponse(BaseModel):
 
 @timeit_decorator
 async def open_browser(prompt: str):
-    """
-    Open a browser tab with the best-fitting URL based on the user's prompt.
-
-    Args:
-        prompt (str): The user's prompt to determine which URL to open.
-    """
-    # Use global 'personalization' variable
     browser_urls = personalization.get("browser_urls", [])
-    browser_urls_str = ", ".join(browser_urls)
     browser = personalization.get("browser", "chrome")
-
-    # Build the structured prompt
     prompt_structure = f"""
 <purpose>
     Select a browser URL from the list of browser URLs based on the user's prompt.
@@ -191,22 +145,14 @@ async def open_browser(prompt: str):
 </instructions>
 
 <browser-urls>
-    {browser_urls_str}
+    {", ".join(browser_urls)}
 </browser-urls>
 
 <user-prompt>
     {prompt}
 </user-prompt>
     """
-
-    logging.info(f"📖 open_browser() Prompt: {prompt_structure}")
-
-    # Call the LLM to select the best-fit URL
     response = structured_output_prompt(prompt_structure, WebUrl)
-
-    logging.info(f"📖 open_browser() Response: {response}")
-
-    # Open the URL if it's not empty
     if response.url:
         logging.info(f"📖 open_browser() Opening URL: {response.url}")
         loop = asyncio.get_running_loop()
@@ -219,22 +165,10 @@ async def open_browser(prompt: str):
 
 @timeit_decorator
 async def create_file(file_name: str, prompt: str) -> dict:
-    """
-    Generate content for a new file based on the user's prompt and the file name.
-    """
-    scratch_pad_dir = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
-
-    # Ensure the scratch pad directory exists
-    os.makedirs(scratch_pad_dir, exist_ok=True)
-
-    # Construct the full file path
     file_path = os.path.join(scratch_pad_dir, file_name)
-
-    # Check if the file already exists
     if os.path.exists(file_path):
         return {"status": "file already exists"}
 
-    # Build the structured prompt
     prompt_structure = f"""
 <purpose>
     Generate content for a new file based on the user's prompt and the file name.
@@ -254,32 +188,15 @@ async def create_file(file_name: str, prompt: str) -> dict:
     {file_name}
 </file-name>
     """
-
-    # Call the LLM to generate the file content
     response = structured_output_prompt(prompt_structure, CreateFileResponse)
-
-    # Write the generated content to the file
     with open(file_path, "w") as f:
         f.write(response.file_content)
-
     return {"status": "file created", "file_name": response.file_name}
 
 
 @timeit_decorator
 async def delete_file(prompt: str, force_delete: bool = False) -> dict:
-    """
-    Delete a file based on the user's prompt.
-    """
-    scratch_pad_dir = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
-
-    # Ensure the scratch pad directory exists
-    os.makedirs(scratch_pad_dir, exist_ok=True)
-
-    # List available files in SCRATCH_PAD_DIR
     available_files = os.listdir(scratch_pad_dir)
-    available_files_str = ", ".join(available_files)
-
-    # Build the structured prompt to select the file and determine 'force_delete' status
     select_file_prompt = f"""
     <purpose>
         Select a file from the available files to delete.
@@ -291,64 +208,42 @@ async def delete_file(prompt: str, force_delete: bool = False) -> dict:
     </instructions>
 
     <available-files>
-        {available_files_str}
+        {", ".join(available_files)}
     </available-files>
 
     <user-prompt>
         {prompt}
     </user-prompt>
     """
-
-    # Call the LLM to select the file and determine 'force_delete'
     file_delete_response = structured_output_prompt(
         select_file_prompt, FileDeleteResponse
     )
 
-    # Check if a file was selected
     if not file_delete_response.file:
-        result = {"status": "No matching file found"}
-    else:
-        selected_file = file_delete_response.file
-        file_path = os.path.join(scratch_pad_dir, selected_file)
+        return {"status": "No matching file found"}
 
-        # Check if the file exists
-        if not os.path.exists(file_path):
-            result = {"status": "File does not exist", "file_name": selected_file}
-        # If 'force_delete' is False, prompt for confirmation
-        elif not force_delete:
-            result = {
-                "status": "Confirmation required",
-                "file_name": selected_file,
-                "message": f"Are you sure you want to delete '{selected_file}'? Say force delete if you want to delete.",
-            }
-        else:
-            # Proceed to delete the file
-            os.remove(file_path)
-            result = {"status": "File deleted", "file_name": selected_file}
+    file_path = os.path.join(scratch_pad_dir, file_delete_response.file)
+    if not os.path.exists(file_path):
+        return {"status": "File does not exist", "file_name": file_delete_response.file}
 
-    return result
+    if not force_delete:
+        return {
+            "status": "Confirmation required",
+            "file_name": file_delete_response.file,
+            "message": f"Are you sure you want to delete '{file_delete_response.file}'? Say force delete if you want to delete.",
+        }
+
+    os.remove(file_path)
+    return {"status": "File deleted", "file_name": file_delete_response.file}
 
 
 @timeit_decorator
 async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> dict:
-    """
-    Update a file based on the user's prompt.
-    """
-    scratch_pad_dir = os.getenv("SCRATCH_PAD_DIR", "./scratchpad")
-
-    # Ensure the scratch pad directory exists
-    os.makedirs(scratch_pad_dir, exist_ok=True)
-
-    # List available files in SCRATCH_PAD_DIR
     available_files = os.listdir(scratch_pad_dir)
-    available_files_str = ", ".join(available_files)
-
-    # Prepare the available models mapping as JSON
     available_model_map = json.dumps(
         {model.value: model_name_to_id[model] for model in ModelName}
     )
 
-    # Build the structured prompt to select the file and model
     select_file_prompt = f"""
 <purpose>
     Select a file from the available files and choose the appropriate model based on the user's prompt.
@@ -362,7 +257,7 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
 </instructions>
 
 <available-files>
-    {available_files_str}
+    {", ".join(available_files)}
 </available-files>
 
 <available-model-map>
@@ -373,29 +268,22 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
     {prompt}
 </user-prompt>
 """
-
-    # Call the LLM to select the file and model
     file_selection_response = structured_output_prompt(
         select_file_prompt, FileSelectionResponse
     )
 
-    # Check if a file was selected
     if not file_selection_response.file:
         return {"status": "No matching file found"}
 
     selected_file = file_selection_response.file
-    selected_model_key = file_selection_response.model
     selected_model = model_name_to_id.get(
-        selected_model_key, model_name_to_id[ModelName.base_model]
+        file_selection_response.model, model_name_to_id[ModelName.base_model]
     )
-
     file_path = os.path.join(scratch_pad_dir, selected_file)
 
-    # Load the content of the selected file
     with open(file_path, "r") as f:
         file_content = f.read()
 
-    # Build the structured prompt to generate the updates
     update_file_prompt = f"""
 <purpose>
     Update the content of the file based on the user's prompt.
@@ -422,22 +310,18 @@ async def update_file(prompt: str, model: ModelName = ModelName.base_model) -> d
     {prompt}
 </user-prompt>
 """
-
-    # Call the LLM to generate the updates using the selected model
     file_update_response = chat_prompt(update_file_prompt, selected_model)
 
-    # Apply the updates by writing the new content to the file
     with open(file_path, "w") as f:
         f.write(file_update_response)
 
     return {
         "status": "File updated",
         "file_name": selected_file,
-        "model_used": selected_model_key,
+        "model_used": file_selection_response.model,
     }
 
 
-# Map function names to their corresponding functions
 function_map = {
     "get_current_time": get_current_time,
     "get_random_number": get_random_number,
@@ -448,7 +332,6 @@ function_map = {
 }
 
 
-# Function to log WebSocket events
 def log_ws_event(direction, event):
     event_type = event.get("type", "Unknown")
     event_emojis = {
@@ -490,67 +373,25 @@ def log_ws_event(direction, event):
 
 
 def structured_output_prompt(prompt: str, response_format: BaseModel) -> BaseModel:
-    """
-    Parse the response from the OpenAI API using structured output.
-
-    Args:
-        prompt (str): The prompt to send to the OpenAI API.
-        response_format (BaseModel): The Pydantic model representing the expected response format.
-
-    Returns:
-        BaseModel: The parsed response from the OpenAI API.
-    """
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
     completion = client.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
+        messages=[{"role": "user", "content": prompt}],
         response_format=response_format,
     )
-
     message = completion.choices[0].message
-
     if not message.parsed:
         raise ValueError(message.refusal)
-
     return message.parsed
 
 
 def chat_prompt(prompt: str, model: str) -> str:
-    """
-    Run a chat model based on the specified model name.
-
-    Args:
-        prompt (str): The prompt to send to the OpenAI API.
-        model (str): The model ID to use for the API call.
-
-    Returns:
-        str: The assistant's response.
-    """
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
     completion = client.beta.chat.completions.parse(
         model=model,
-        messages=[
-            {"role": "user", "content": prompt},
-        ],
+        messages=[{"role": "user", "content": prompt}],
     )
-
-    message = completion.choices[0].message
-
-    return message.content
-
-
-# Audio recording parameters
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 24000
-
-# big ideas here, really, this should be db calls. More on this later.
-assistant_storage: dict = {}
+    return completion.choices[0].message.content
 
 
 class AsyncMicrophone:
@@ -572,8 +413,6 @@ class AsyncMicrophone:
     def callback(self, in_data, frame_count, time_info, status):
         if self.is_recording and not self.is_receiving:
             self.queue.put(in_data)
-        # if self.is_recording:
-        #     self.queue.put(in_data)
         return (None, pyaudio.paContinue)
 
     def start_recording(self):
