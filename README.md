@@ -1,82 +1,96 @@
-# POC Python Realtime API o1 assistant
-> This is a proof of concept for using the OpenAI's [Realtime API](https://openai.com/index/introducing-the-realtime-api/) to chain tools, call o1-preview & o1-mini, [structure output](https://openai.com/index/introducing-structured-outputs-in-the-api/) responses, and glimpse into the future of **AI assistant powered engineering**.
->
-> See video where we [use and discuss this POC](https://youtu.be/vN0t-kcPOXo)
->
-> This codebase is a v0, poc. It's buggy, but contains the core ideas for realtime personal ai assistants & AI Agents.
+# Realtime API Async Python Assistant
 
-<img src="./images/ada-is-back.png" alt="realtime-assistant" style="max-width: 800px;">
+This project demonstrates the use of OpenAI's Realtime API to create an AI assistant capable of handling voice input, performing various tasks, and providing audio responses. It showcases the integration of tools, structured output responses, and real-time interaction.
+
+## Features
+
+- Real-time voice interaction with an AI assistant
+- Integration with OpenAI's GPT-4o Realtime API
+- Asynchronous audio input and output handling
+- Custom function execution based on user requests
+- ChatGPT-like visual interface for audio volume visualization
+- Structured output processing
+- File management capabilities (create, update, delete)
+- Browser interaction
+- Task delegation to AI agents
 
 ## Setup
-- [Install uv](https://docs.astral.sh/uv/), the hyper modern Python package manager.
-- Setup environment `cp .env.sample .env` add your `OPENAI_API_KEY`
-- Update `personalization.json` to fit your setup
-- Install dependencies `uv sync`
-- Run the realtime assistant `uv run main`
 
-## Try This
+1. Install [uv](https://docs.astral.sh/uv/), the modern Python package manager.
+2. Clone this repository.
+3. Copy the sample environment file: `cp .env.sample .env`
+4. Add your `OPENAI_API_KEY` to the `.env` file.
+5. Update `personalization.json` with your preferred settings.
+6. Install dependencies: `uv sync`
+7. Run the assistant: `uv run main`
 
-Here are some voice commands you can try with the assistant:
+## Usage
 
-1. "Hey Ada, how are you?"
-2. "What's the current time?"
-3. "Generate a random number."
-4. "Open ChatGPT, Claude, and Hacker News."
-5. "Create a new CSV file called user analytics with 10 mock rows."
-6. "Update the user analytics file, add 20 additional mock rows, use a reasoning model."
+Once the assistant is running, you can interact with it using voice commands. Here are some example interactions:
 
-## Code Breakdown
+1. "What's the current time?"
+2. "Generate a random number."
+3. "Open ChatGPT in the browser."
+4. "Create a new file called user_data.txt with some sample content."
+5. "Update the user_data.txt file, add more information."
+6. "Delete the user_data.txt file."
 
-### Main Script (`main.py`)
-The `main.py` script serves as the entry point for the application. It sets up the WebSocket connection, handles audio input/output, and manages the interaction between the user and the AI assistant.
+## Code Structure
 
-### Environment and Personalization Setup
-The application uses environment variables (loaded from a `.env` file) and a `personalization.json` file to customize the assistant's behavior and store API keys.
+### Main Components
 
-### Function Definitions
-Several functions are defined to handle various tasks:
-- `get_current_time()`: Returns the current time.
-- `get_random_number()`: Generates a random number between 1 and 100.
-- `open_browser()`: Opens specified URLs in the browser.
-- `create_file()`: Creates a new file with generated content.
-- `update_file()`: Updates an existing file's content.
-- `delete_file()`: Deletes a specified file.
+- `main.py`: Entry point of the application, sets up the WebSocket connection and manages the main event loop.
+- `functions.py`: Contains definitions for various functions that can be called by the AI assistant.
+- `models.py`: Defines Pydantic models for structured data handling.
+- `config.py`: Manages configuration settings and environment variables.
+- `utils.py`: Provides utility functions for logging, encoding, and prompting.
+- `visual_interface.py`: Implements a visual interface for audio energy visualization.
+- `websocket_handler.py`: Handles WebSocket events and message processing.
+- `agency_functions.py`: Defines virtual agents for task delegation.
 
-These functions can be called by the AI assistant to perform actions based on user requests.
+### Key Features
 
-### AsyncMicrophone Class
-The `AsyncMicrophone` class manages asynchronous audio input, allowing for real-time speech capture and processing.
+1. **Asynchronous WebSocket Communication**:
+   The application uses `websockets` to establish an asynchronous connection with the OpenAI Realtime API.
 
-### WebSocket Connection and Event Handling
-The application establishes a WebSocket connection with the OpenAI Realtime API. It handles various events such as `response.created`, `response.done`, and function calls, enabling real-time interaction with the AI assistant.
+2. **Audio Input/Output Handling**:
+   The `AsyncMicrophone` class manages real-time audio capture, while the `play_audio` function handles audio playback.
 
-### Audio Processing
-Audio data is captured, encoded in base64, and sent over the WebSocket. The `play_audio()` function handles playback of the assistant's audio responses.
+3. **Function Execution**:
+   Custom functions are defined in `functions.py` and can be called by the AI assistant based on user requests.
 
-### Runtime Logging and Decorators
-The `timeit_decorator` is used to log execution times of functions. Runtime information is logged to `runtime_time_table.jsonl` for performance analysis.
+4. **Structured Output Processing**:
+   The application uses Pydantic models to handle structured data responses from the AI.
 
-### Entry Point (`main()` Function)
-The `main()` function initializes the application, sets up the WebSocket connection, and manages the main event loop for user interaction.
+5. **Visual Interface**:
+   A PyGame-based visual interface provides real-time visualization of current audio volume.
 
-### Additional Resources and Utilities
-The codebase includes various utility functions for tasks such as structured output prompts, chat prompts, and audio encoding/decoding.
+6. **Agency Functions**:
+   The project includes a basic implementation of AI agents for task delegation.
 
-## Improvements
-> Up for a challenge? Here are some ideas on how to improve the experience:
 
-- Organize code.
-- Add interruption handling. Current version prevents it for simplicity.
-- Add transcript logging.
-- Make personalization.json a pydantic type.
-- Let tools run in parallel.
-- Fix audio randomly cutting out near the end.
+## Configuration
+
+The project uses environment variables and a `personalization.json` file for configuration. Ensure that you have set up the following:
+
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `PERSONALIZATION_FILE`: Path to your personalization JSON file
+- `SCRATCH_PAD_DIR`: Directory for temporary file storage
+
+## Improvements and Future Work
+
+- Implement interruption handling for smoother conversation flow.
+- Add transcript logging for better conversation tracking.
+- Convert `personalization.json` to a Pydantic model for improved type safety.
+- Implement parallel execution of tools for increased efficiency.
+- Fix audio cutoff issues near the end of responses.
+- Enhance error handling and recovery mechanisms.
+- Implement more sophisticated turn-taking algorithms.
 
 ## Resources
-- https://openai.com/index/introducing-the-realtime-api/
-- https://openai.com/index/introducing-structured-outputs-in-the-api/
-- https://platform.openai.com/docs/guides/realtime/events
-- https://platform.openai.com/docs/api-reference/realtime-client-events/response-create
-- https://platform.openai.com/playground/realtime
-- https://github.com/Azure-Samples/aoai-realtime-audio-sdk/blob/main/README.md
-- https://docs.astral.sh/uv/
+
+- [OpenAI Realtime API Documentation](https://platform.openai.com/docs/guides/realtime)
+- [OpenAI Structured Outputs](https://platform.openai.com/docs/guides/structured-outputs)
+- [WebSockets Library for Python](https://websockets.readthedocs.io/)
+- [PyAudio Documentation](https://people.csail.mit.edu/hubert/pyaudio/docs/)
+- [Pygame Documentation](https://www.pygame.org/docs/)
