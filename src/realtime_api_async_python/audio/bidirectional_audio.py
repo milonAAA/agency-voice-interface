@@ -9,6 +9,7 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 24000
 
+
 class BidirectionalAudio:
     def __init__(self):
         self.p = pyaudio.PyAudio()
@@ -61,10 +62,14 @@ class BidirectionalAudio:
         self.p.terminate()
         logging.info("AsyncMicrophone closed")
 
+
 async def play_audio(audio_data):
+    logging.info(f"play_audio called with {len(audio_data)} bytes of audio data")
     p = pyaudio.PyAudio()
     stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True)
+    logging.debug("Audio stream opened")
     stream.write(audio_data)
+    logging.debug("Audio data written to stream")
 
     # Add a small delay (e.g., 100ms) of silence at the end to prevent popping, and weird cuts off sounds
     silence_duration = 0.2  # 200ms
@@ -73,12 +78,13 @@ async def play_audio(audio_data):
         silence_frames * CHANNELS * 2
     )  # 2 bytes per sample for 16-bit audio
     stream.write(silence)
+    logging.debug(f"Added {silence_duration} seconds of silence")
 
     # Add a small pause before closing the stream to make sure the audio is fully played
     await asyncio.sleep(0.5)
+    logging.debug("Paused for 0.5 seconds before closing stream")
 
     stream.stop_stream()
     stream.close()
     p.terminate()
-    logging.debug("Audio playback completed")
-
+    logging.info("Audio playback completed")

@@ -18,6 +18,7 @@ setup()
 # big ideas here, really, this should be db calls. More on this later.
 assistant_storage: dict = {}
 
+
 async def realtime_api():
     while True:
         try:
@@ -40,15 +41,16 @@ async def realtime_api():
                 logging.info("Connected to the server.")
 
                 # Initialize the session with voice capabilities and tool
-                session_update = get_session_update(tool_schema, get_session_instructions())
-                
+                session_update = get_session_update(
+                    tool_schema, get_session_instructions()
+                )
+
                 log_ws_event("Outgoing", session_update)
                 await websocket.send(json.dumps(session_update))
 
                 async def process_ws_messages():
                     assistant_reply = ""
                     audio_chunks = []
-                    response_in_progress = False
                     function_call = None
                     function_call_args = ""
                     response_start_time = None
@@ -59,9 +61,35 @@ async def realtime_api():
                             event = json.loads(message)
                             log_ws_event("Incoming", event)
 
+                            if event["type"] == "error":
+                                error_message = event.get("error", {}).get(
+                                    "message", ""
+                                )
+                                error_code = event.get("error", {}).get("code", "")
+                                logging.error(f"Error: {error_code} - {error_message}")
+
+                                if "buffer is empty" in error_message:
+                                    logging.info(
+                                        "Received 'buffer is empty' error, no audio data sent."
+                                    )
+                                    continue
+                                elif (
+                                    "Conversation already has an active response"
+                                    in error_message
+                                ):
+                                    logging.info(
+                                        "Received 'active response' error, adjusting response flow."
+                                    )
+                                    continue
+                                else:
+                                    logging.error(
+                                        f"Unhandled error: {error_code} - {error_message}"
+                                    )
+                                    # Depending on the error, you might want to break or continue
+                                    continue
+
                             if event["type"] == "response.created":
                                 mic.start_receiving()
-                                response_in_progress = True
                             elif event["type"] == "response.output_item.added":
                                 item = event.get("item", {})
                                 if item.get("type") == "function_call":
@@ -76,6 +104,9 @@ async def realtime_api():
                             elif (
                                 event["type"] == "response.function_call_arguments.done"
                             ):
+                                logging.info(
+                                    f"Audio chunk added. Total chunks: {len(audio_chunks)}"
+                                )
                                 if function_call:
                                     function_name = function_call.get("name")
                                     call_id = function_call.get("call_id")
@@ -157,35 +188,15 @@ async def realtime_api():
                                 audio_chunks = []
                                 logging.info("Calling stop_receiving()")
                                 mic.stop_receiving()
+                                logging.info(
+                                    f"Response complete. Audio chunks: {len(audio_chunks)}, Total audio size: {sum(len(chunk) for chunk in audio_chunks)}"
+                                )
                             elif event["type"] == "rate_limits.updated":
-                                response_in_progress = False
                                 mic.is_recording = True
                                 logging.info(
                                     "Resumed recording after rate_limits.updated"
                                 )
                                 pass
-                            elif event["type"] == "error":
-                                error_message = event.get("error", {}).get(
-                                    "message", ""
-                                )
-                                logging.error(f"Error: {error_message}")
-                                if "buffer is empty" in error_message:
-                                    logging.info(
-                                        "Received 'buffer is empty' error, no audio data sent."
-                                    )
-                                    continue
-                                elif (
-                                    "Conversation already has an active response"
-                                    in error_message
-                                ):
-                                    logging.info(
-                                        "Received 'active response' error, adjusting response flow."
-                                    )
-                                    response_in_progress = True
-                                    continue
-                                else:
-                                    logging.error(f"Unhandled error: {error_message}")
-                                    break
                             elif event["type"] == "input_audio_buffer.speech_started":
                                 logging.info("Speech detected, listening...")
                             elif event["type"] == "input_audio_buffer.speech_stopped":
@@ -202,6 +213,12 @@ async def realtime_api():
                         except websockets.ConnectionClosed:
                             logging.warning("WebSocket connection closed")
                             break
+                        except json.JSONDecodeError:
+                            logging.error(f"Failed to decode JSON: {message}")
+                        except Exception as e:
+                            logging.exception(
+                                f"An unexpected error occurred while processing message: {e}"
+                            )
 
                 ws_task = asyncio.create_task(process_ws_messages())
 
@@ -226,7 +243,17 @@ async def realtime_api():
                                         "audio": base64_audio,
                                     }
                                     log_ws_event("Outgoing", audio_event)
-                                    await websocket.send(json.dumps(audio_event))
+                                    try:
+                                        await websocket.send(json.dumps(audio_event))
+                                    except websockets.exceptions.ConnectionClosed:
+                                        logging.error(
+                                            "WebSocket connection closed while sending audio data"
+                                        )
+                                        break
+                                    except Exception as e:
+                                        logging.exception(
+                                            f"Error sending audio data: {e}"
+                                        )
                                 else:
                                     logging.debug("No audio data to send")
                         else:
@@ -235,14 +262,24 @@ async def realtime_api():
                             )  # Wait while receiving assistant response
                 except KeyboardInterrupt:
                     logging.info("Keyboard interrupt received. Closing the connection.")
+                except Exception as e:
+                    logging.exception(
+                        f"An unexpected error occurred in the main loop: {e}"
+                    )
                 finally:
                     exit_event.set()
                     mic.stop_recording()
                     mic.close()
-                    await websocket.close()
+                    try:
+                        await websocket.close()
+                    except Exception as e:
+                        logging.exception(f"Error closing WebSocket connection: {e}")
 
                 # Wait for the WebSocket processing task to complete
-                await ws_task
+                try:
+                    await ws_task
+                except Exception as e:
+                    logging.exception(f"Error in WebSocket processing task: {e}")
 
             # If execution reaches here without exceptions, exit the loop
             break
@@ -265,7 +302,6 @@ async def realtime_api():
                 mic.close()
             if "websocket" in locals():
                 await websocket.close()
-
 
 
 def main():
