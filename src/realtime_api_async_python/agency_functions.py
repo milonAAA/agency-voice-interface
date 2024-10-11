@@ -27,15 +27,16 @@ class VirtualAssistant(Agent):
 developer_agent = Developer()
 virtual_assistant_agent = VirtualAssistant()
 
-# Initialize the Agency with the agents
-agency = Agency(
-    [
-        developer_agent,  # Developer will be the entry point for communication
-        [
-            developer_agent,
-            virtual_assistant_agent,
-        ],  # Developer can initiate communication with Virtual Assistant
-    ],
+# Initialize separate agencies for each agent
+developer_agency = Agency(
+    [developer_agent],
+    shared_instructions="agency_manifesto.md",
+    temperature=0.1,
+    max_prompt_tokens=25000,
+)
+
+virtual_assistant_agency = Agency(
+    [virtual_assistant_agent],
     shared_instructions="agency_manifesto.md",
     temperature=0.1,
     max_prompt_tokens=25000,
@@ -43,12 +44,10 @@ agency = Agency(
 
 
 async def delegate_task_to_developer(task_description: str):
-    response = agency.get_completion(agent_name="Developer", prompt=task_description)
+    response = developer_agency.get_completion(message=task_description)
     return {"response": response}
 
 
 async def assign_task_to_virtual_assistant(task_description: str):
-    response = agency.get_completion(
-        agent_name="VirtualAssistant", prompt=task_description
-    )
+    response = virtual_assistant_agency.get_completion(message=task_description)
     return {"response": response}
