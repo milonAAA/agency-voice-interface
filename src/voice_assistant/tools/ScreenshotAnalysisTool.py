@@ -15,7 +15,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 class ScreenshotAnalysisTool(BaseTool):
     """
-    Get an analysis of the screenshot of the active window.
+    Analyze what's currently on the user's screen by examining a screenshot of the active window.
     """
 
     prompt: str = Field(..., description="Prompt to analyze the screenshot")

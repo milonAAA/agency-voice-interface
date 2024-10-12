@@ -2,6 +2,7 @@ import pygame
 import asyncio
 import numpy as np
 from collections import deque
+import os
 
 
 class VisualInterface:
@@ -11,6 +12,12 @@ class VisualInterface:
         self.height = height
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Assistant Voice Activity")
+
+        # Set the app icon
+        icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
+        icon = pygame.image.load(icon_path)
+        pygame.display.set_icon(icon)
+
         self.clock = pygame.time.Clock()
         self.is_active = False
         self.is_assistant_speaking = False
