@@ -24,19 +24,20 @@ class UpdateFileTool(BaseTool):
 
     async def run(self):
         result = await update_file(self.prompt)
+        if "model_used" in result and isinstance(result["model_used"], ModelName):
+            result["model_used"] = result["model_used"].value
         return str(result)
 
 
 @timeit_decorator
 async def update_file(prompt: str) -> dict:
     available_files = os.listdir(SCRATCH_PAD_DIR)
-    available_model_map = json.dumps(
-        {model.value: ModelName[model] for model in ModelName}
-    )
+    available_model_map = {model.value: model.name for model in ModelName}
 
-    # Select file and model based on user prompt
     file_selection_response = get_structured_output_completion(
-        create_file_selection_prompt(available_files, available_model_map, prompt),
+        create_file_selection_prompt(
+            available_files, json.dumps(available_model_map), prompt
+        ),
         FileSelectionResponse,
     )
 
@@ -47,19 +48,16 @@ async def update_file(prompt: str) -> dict:
     selected_model = file_selection_response.model or ModelName.BASE_MODEL
     file_path = os.path.join(SCRATCH_PAD_DIR, selected_file)
 
-    # Read current file content
     with open(file_path, "r") as f:
         file_content = f.read()
 
-    # Generate updated file content
-    file_update_response = get_chat_completion(
+    updated_content = get_chat_completion(
         create_file_update_prompt(selected_file, file_content, prompt),
         selected_model.value,
     )
 
-    # Write updated content to file
     with open(file_path, "w") as f:
-        f.write(file_update_response)
+        f.write(updated_content)
 
     return {
         "status": "File updated",
