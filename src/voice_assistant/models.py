@@ -4,10 +4,10 @@ from pydantic import BaseModel
 
 
 class ModelName(str, Enum):
-    STATE_OF_THE_ART_MODEL = "state_of_the_art_model"
-    REASONING_MODEL = "reasoning_model"
-    BASE_MODEL = "base_model"
-    FAST_MODEL = "fast_model"
+    STATE_OF_THE_ART_MODEL = "gpt-4o"
+    REASONING_MODEL = "o1-mini"
+    BASE_MODEL = "gpt-4o"
+    FAST_MODEL = "gpt-4o-mini"
 
 
 class WebUrl(BaseModel):

@@ -135,7 +135,6 @@ async def process_ws_messages(websocket, mic, visual_interface):
                 logging.info("Resumed recording after rate_limits.updated")
             elif event_type == "error":
                 error_message = event.get("error", {}).get("message", "")
-                logging.error(f"Error: {error_message}")
                 if "buffer is empty" in error_message:
                     logging.info(
                         "Received 'buffer is empty' error, no audio data sent."
