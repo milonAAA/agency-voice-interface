@@ -41,7 +41,9 @@ class VisualInterface:
         # Smooth transition for radius
         target_radius = self.base_radius
         if self.energy_queue:
-            normalized_energy = np.mean(self.energy_queue) / self.max_energy
+            normalized_energy = np.mean(self.energy_queue) / (
+                self.max_energy or 1.0
+            )  # Avoid division by zero
             target_radius += int(normalized_energy * self.base_radius)
 
         self.current_radius += (target_radius - self.current_radius) * 0.2
