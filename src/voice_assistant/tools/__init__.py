@@ -18,3 +18,7 @@ def load_tools():
                 ):
                     tools.append(obj)
     return tools
+
+
+# Load all tools
+TOOLS: list[BaseTool] = load_tools()

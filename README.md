@@ -14,6 +14,22 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 - Browser interaction
 - Task delegation to AI agents
 
+## Project Status
+
+- [x] Standalone tools integration
+- [ ] Agency integration (in progress)
+
+## Todo Checklist
+
+- [x] Implement standalone tools
+- [ ] Complete agency integration
+- [ ] Implement interruption handling for smoother conversation flow
+- [ ] Add transcript logging for better conversation tracking
+- [ ] Convert `personalization.json` to a Pydantic model for improved type safety
+- [ ] Implement parallel execution of tools for increased efficiency
+- [ ] Fix audio cutoff issues near the end of responses
+- [ ] Enhance error handling and recovery mechanisms
+
 ## Setup
 
 1. Install [uv](https://docs.astral.sh/uv/), the modern Python package manager.
@@ -62,7 +78,6 @@ Once the assistant is running, you can interact with it using voice commands. He
 5. **Visual Interface**:
    A PyGame-based visual interface provides real-time visualization of current audio volume.
 
-
 ## Configuration
 
 The project uses environment variables and a `personalization.json` file for configuration. Ensure that you have set up the following:
@@ -70,16 +85,6 @@ The project uses environment variables and a `personalization.json` file for con
 - `OPENAI_API_KEY`: Your OpenAI API key
 - `PERSONALIZATION_FILE`: Path to your personalization JSON file
 - `SCRATCH_PAD_DIR`: Directory for temporary file storage
-
-## Improvements and Future Work
-
-- Implement interruption handling for smoother conversation flow.
-- Add transcript logging for better conversation tracking.
-- Convert `personalization.json` to a Pydantic model for improved type safety.
-- Implement parallel execution of tools for increased efficiency.
-- Fix audio cutoff issues near the end of responses.
-- Enhance error handling and recovery mechanisms.
-- Implement more sophisticated turn-taking algorithms.
 
 ## Resources
 

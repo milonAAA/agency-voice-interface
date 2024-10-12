@@ -5,14 +5,10 @@ import base64
 import time
 import websockets
 import numpy as np
-from agency_swarm.tools import BaseTool
 
-from voice_assistant.tools import load_tools
+from voice_assistant.tools import TOOLS
 from voice_assistant.utils import log_ws_event, log_runtime
 from voice_assistant.audio import play_audio
-
-# Load all tools
-TOOLS: list[BaseTool] = load_tools()
 
 
 async def process_ws_messages(websocket, mic, visual_interface):
