@@ -70,7 +70,7 @@ async def realtime_api():
                     "session": {
                         "modalities": ["text", "audio"],
                         "instructions": SESSION_INSTRUCTIONS,
-                        "voice": "alloy",
+                        "voice": "shimmer",
                         "input_audio_format": "pcm16",
                         "output_audio_format": "pcm16",
                         "turn_detection": {
