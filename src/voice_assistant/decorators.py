@@ -1,8 +1,8 @@
-# src/realtime_api_async_python/decorators.py
+# src/voice_assistant/decorators.py
 import functools
 import time
 import asyncio
-from realtime_api_async_python.utils import log_runtime
+from voice_assistant.utils import log_runtime
 
 
 def timeit_decorator(func):

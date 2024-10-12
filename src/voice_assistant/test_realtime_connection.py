@@ -26,7 +26,7 @@ async def test_realtime_api_connection():
 
     # Attempt to establish the WebSocket connection
     try:
-        async with websockets.connect(url, extra_headers=headers) as websocket:
+        async with websockets.connect(url, extra_headers=headers):
             print("Connected to the server.")
     except websockets.InvalidStatusCode as e:
         print(f"Failed to connect: {e}")

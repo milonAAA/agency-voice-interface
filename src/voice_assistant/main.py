@@ -1,4 +1,4 @@
-# src/realtime_api_async_python/main.py
+# src/voice_assistant/main.py
 import asyncio
 import json
 import logging
@@ -8,19 +8,19 @@ from websockets.exceptions import ConnectionClosedError
 import pygame
 import numpy as np
 
-from realtime_api_async_python.config import (
+from voice_assistant.config import (
     SESSION_INSTRUCTIONS,
     SILENCE_THRESHOLD,
     PREFIX_PADDING_MS,
     SILENCE_DURATION_MS,
 )
-from realtime_api_async_python.microphone import AsyncMicrophone
-from realtime_api_async_python.utils import (
+from voice_assistant.microphone import AsyncMicrophone
+from voice_assistant.utils import (
     log_ws_event,
     base64_encode_audio,
 )
-from realtime_api_async_python.websocket_handler import TOOLS, process_ws_messages
-from realtime_api_async_python.visual_interface import (
+from voice_assistant.websocket_handler import TOOLS, process_ws_messages
+from voice_assistant.visual_interface import (
     VisualInterface,
     run_visual_interface,
 )
@@ -53,9 +53,17 @@ async def realtime_api():
             mic = AsyncMicrophone()
             visual_interface = VisualInterface()
 
+            # Initialize tools separately
+            initialized_tools = []
+            for tool in TOOLS:
+                tool_schema = {
+                    k: v for k, v in tool.openai_schema.items() if k != "strict"
+                }
+                tool_type = "function" if not hasattr(tool, "type") else tool.type
+                initialized_tools.append({**tool_schema, "type": tool_type})
+
             async with websockets.connect(url, extra_headers=headers) as websocket:
                 logging.info("Connected to the server.")
-
                 # Initialize the session with voice capabilities and tools
                 session_update = {
                     "type": "session.update",
@@ -71,7 +79,7 @@ async def realtime_api():
                             "prefix_padding_ms": PREFIX_PADDING_MS,
                             "silence_duration_ms": SILENCE_DURATION_MS,
                         },
-                        "tools": [tool.openai_schema for tool in TOOLS],
+                        "tools": initialized_tools,
                     },
                 }
                 log_ws_event("outgoing", session_update)

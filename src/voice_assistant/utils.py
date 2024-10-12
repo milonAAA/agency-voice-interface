@@ -1,9 +1,9 @@
-# src/realtime_api_async_python/utils.py
+# src/voice_assistant/utils.py
 import base64
 import json
 import logging
 from datetime import datetime
-from realtime_api_async_python.config import RUN_TIME_TABLE_LOG_JSON
+from voice_assistant.config import RUN_TIME_TABLE_LOG_JSON
 
 
 def base64_encode_audio(audio_bytes: bytes) -> str:

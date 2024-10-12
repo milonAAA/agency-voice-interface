@@ -20,4 +20,4 @@ build-backend = "hatchling.build"
 
 
 [project.scripts]
-main = "realtime_api_async_python.main:main"
+main = "voice_assistant.main:main"

@@ -1,4 +1,4 @@
-# src/realtime_api_async_python/websocket_handler.py
+# src/voice_assistant/websocket_handler.py
 import json
 import logging
 import base64
@@ -7,9 +7,9 @@ import websockets
 import numpy as np
 from agency_swarm.tools import BaseTool
 
-from realtime_api_async_python.tools import load_tools
-from realtime_api_async_python.utils import log_ws_event, log_runtime
-from realtime_api_async_python.audio import play_audio
+from voice_assistant.tools import load_tools
+from voice_assistant.utils import log_ws_event, log_runtime
+from voice_assistant.audio import play_audio
 
 # Load all tools
 TOOLS: list[BaseTool] = load_tools()

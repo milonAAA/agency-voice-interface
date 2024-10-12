@@ -3,10 +3,10 @@ from pydantic import Field
 import os
 import json
 from dotenv import load_dotenv
-from realtime_api_async_python.decorators import timeit_decorator
-from realtime_api_async_python.models import FileSelectionResponse, ModelName
-from realtime_api_async_python.config import SCRATCH_PAD_DIR
-from realtime_api_async_python.tools.utils import (
+from voice_assistant.decorators import timeit_decorator
+from voice_assistant.models import FileSelectionResponse, ModelName
+from voice_assistant.config import SCRATCH_PAD_DIR
+from voice_assistant.tools.utils import (
     get_structured_output_completion,
     get_chat_completion,
 )

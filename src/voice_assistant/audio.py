@@ -1,9 +1,9 @@
-# src/realtime_api_async_python/audio.py
+# src/voice_assistant/audio.py
 import pyaudio
 import asyncio
 import logging
 import numpy as np
-from realtime_api_async_python.config import FORMAT, CHANNELS, RATE
+from voice_assistant.config import FORMAT, CHANNELS, RATE
 
 
 async def play_audio(audio_data: bytes, visual_interface):

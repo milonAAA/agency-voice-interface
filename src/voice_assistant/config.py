@@ -1,4 +1,4 @@
-# src/realtime_api_async_python/config.py
+# src/voice_assistant/config.py
 import os
 import json
 from dotenv import load_dotenv

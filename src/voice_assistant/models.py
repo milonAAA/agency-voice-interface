@@ -1,4 +1,4 @@
-# src/realtime_api_async_python/models.py
+# src/voice_assistant/models.py
 from enum import Enum
 from pydantic import BaseModel
 

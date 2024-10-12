@@ -1,0 +1,110 @@
+# Cursor Rules for Real-Time Voice Assistant Project
+
+## Standalone Tool Development
+
+Standalone tools are tools that are not part of an agent or agency.
+
+1. All standalone tools should be placed in the `src/voice_assistant/tools/` directory.
+2. Each tool should be in its own file, named after the tool class (e.g., `GetCurrentTime.py` for `GetCurrentTime` class).
+3. Tools must inherit from `BaseTool` from `agency_swarm.tools`.
+4. Use async syntax for the `run` method:
+
+```python
+from agency_swarm.tools import BaseTool
+from pydantic import Field
+
+class MyAsyncTool(BaseTool):
+    input_field: str = Field(..., description="Description of the input field")
+
+    async def run(self):
+        # Async implementation here
+        result = await some_async_function(self.input_field)
+        return result
+```
+
+5. For synchronous operations within async tools, use `asyncio.to_thread`:
+
+```python
+import asyncio
+
+class MySyncOperationTool(BaseTool):
+    async def run(self):
+        result = await asyncio.to_thread(some_sync_function, self.input_field)
+        return result
+```
+
+6. Always use environment variables for API keys and sensitive information:
+
+```python
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("MY_API_KEY")
+```
+
+7. Add a test case at the bottom of each tool file:
+
+```python
+if __name__ == "__main__":
+    import asyncio
+    tool = MyAsyncTool(input_field="test")
+    result = asyncio.run(tool.run())
+    print(result)
+```
+
+## AI Agent Integration
+
+1. Use asyncio.to_thread to call agency.get_completion in a separate thread:
+
+from agency_swarm.tools import BaseTool
+from pydantic import Field
+import asyncio
+
+class AIAgentTool(BaseTool):
+    input_message: str = Field(..., description="Message to send to the AI agent")
+
+    async def run(self):
+        # Assuming 'agency' is your Agency instance
+        result = await asyncio.to_thread(agency.get_completion, self.input_message)
+        return result
+
+## General Guidelines
+
+1. Follow PEP 8 style guide for Python code.
+2. Use descriptive variable names and add comments for complex logic.
+3. Use uv add to add new packages to the project.
+4. Keep the agency.py file updated with new agents and communication flows.
+5. Maintain clear and concise documentation in instructions.md files for each agent.
+
+## Folder Structure
+
+Maintain the following folder structure:
+
+voice_assistant/
+├── agencies/
+│   ├── agency_name/
+│   │   ├── agent_name/
+│   │   │   ├── __init__.py
+│   │   │   ├── agent_name.py
+│   │   │   ├── instructions.md
+│   │   │   └── tools/
+│   │   │       └── ...
+│   │   ├── another_agent/
+│   │   │   ├── __init__.py
+│   │   │   ├── another_agent.py
+│   │   │   ├── instructions.md
+│   │   │   └── tools/
+│   │   │       └── ...
+│   │   ├── agency.py
+│   │   └── agency_manifesto.md
+│   └── ...
+├── tools/
+│   ├── GetCurrentTime.py
+│   ├── DeleteFileTool.py
+│   ├── CreateFileTool.py
+│   ├── OpenBrowser.py
+│   └── ...
+
+Remember to adjust imports and paths accordingly when adding new tools or agents.

@@ -2,10 +2,10 @@ from agency_swarm.tools import BaseTool
 from pydantic import Field
 import os
 from dotenv import load_dotenv
-from realtime_api_async_python.decorators import timeit_decorator
-from realtime_api_async_python.models import FileDeleteResponse
-from realtime_api_async_python.tools.utils import get_structured_output_completion
-from realtime_api_async_python.config import SCRATCH_PAD_DIR
+from voice_assistant.decorators import timeit_decorator
+from voice_assistant.models import FileDeleteResponse
+from voice_assistant.tools.utils import get_structured_output_completion
+from voice_assistant.config import SCRATCH_PAD_DIR
 
 load_dotenv()
 

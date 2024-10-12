@@ -5,9 +5,9 @@ import os
 import webbrowser
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from realtime_api_async_python.decorators import timeit_decorator
-from realtime_api_async_python.tools.utils import get_structured_output_completion
-from realtime_api_async_python.models import WebUrl
+from voice_assistant.decorators import timeit_decorator
+from voice_assistant.tools.utils import get_structured_output_completion
+from voice_assistant.models import WebUrl
 import logging
 
 

@@ -1,9 +1,9 @@
-# src/realtime_api_async_python/microphone.py
+# src/voice_assistant/microphone.py
 import pyaudio
 import queue
 import logging
 from typing import Optional
-from realtime_api_async_python.config import FORMAT, CHANNELS, RATE, CHUNK
+from voice_assistant.config import FORMAT, CHANNELS, RATE, CHUNK
 
 
 class AsyncMicrophone:
