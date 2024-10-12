@@ -10,7 +10,7 @@ from voice_assistant.config import SCRATCH_PAD_DIR
 load_dotenv()
 
 
-class CreateFileTool(BaseTool):
+class CreateFile(BaseTool):
     """
     A tool for creating a new file with generated content based on a prompt.
     """
@@ -55,8 +55,6 @@ async def create_file(file_name: str, prompt: str) -> dict:
 if __name__ == "__main__":
     import asyncio
 
-    tool = CreateFileTool(
-        file_name="test.txt", prompt="Write a short story about a robot."
-    )
+    tool = CreateFile(file_name="test.txt", prompt="Write a short story about a robot.")
 
     print(asyncio.run(tool.run()))

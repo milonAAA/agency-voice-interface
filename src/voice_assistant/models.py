@@ -1,9 +1,9 @@
 # src/voice_assistant/models.py
-from enum import Enum
+from enum import StrEnum
 from pydantic import BaseModel
 
 
-class ModelName(str, Enum):
+class ModelName(StrEnum):
     STATE_OF_THE_ART_MODEL = "gpt-4o"
     REASONING_MODEL = "o1-mini"
     BASE_MODEL = "gpt-4o"

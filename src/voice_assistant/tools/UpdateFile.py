@@ -14,7 +14,7 @@ from voice_assistant.tools.utils import (
 load_dotenv()
 
 
-class UpdateFileTool(BaseTool):
+class UpdateFile(BaseTool):
     """A tool for updating the content of a file based on a prompt."""
 
     prompt: str = Field(
@@ -53,7 +53,7 @@ async def update_file(prompt: str) -> dict:
 
     updated_content = get_chat_completion(
         create_file_update_prompt(selected_file, file_content, prompt),
-        selected_model.value,
+        selected_model,
     )
 
     with open(file_path, "w") as f:
@@ -125,5 +125,5 @@ def create_file_update_prompt(file_name, file_content, user_prompt):
 if __name__ == "__main__":
     import asyncio
 
-    tool = UpdateFileTool(prompt="Update the test file to include a paragraph about AI")
+    tool = UpdateFile(prompt="Update the test file to include a paragraph about AI")
     print(asyncio.run(tool.run()))

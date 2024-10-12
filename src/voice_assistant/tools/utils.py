@@ -2,13 +2,15 @@ import os
 from pydantic import BaseModel
 import openai
 
+from voice_assistant.models import ModelName
+
 
 def get_structured_output_completion(
     prompt: str, response_format: BaseModel
 ) -> BaseModel:
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     completion = client.beta.chat.completions.parse(
-        model="gpt-4o",
+        model=ModelName.STATE_OF_THE_ART_MODEL.value,
         messages=[{"role": "user", "content": prompt}],
         response_format=response_format,
     )
@@ -18,10 +20,10 @@ def get_structured_output_completion(
     return message.parsed
 
 
-def get_chat_completion(prompt: str, model: str) -> str:
+def get_chat_completion(prompt: str, model: ModelName) -> str:
     client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     completion = client.beta.chat.completions.parse(
-        model=model,
+        model=model.value,
         messages=[{"role": "user", "content": prompt}],
     )
     return completion.choices[0].message.content

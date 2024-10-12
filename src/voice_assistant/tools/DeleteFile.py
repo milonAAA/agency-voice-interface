@@ -10,7 +10,7 @@ from voice_assistant.config import SCRATCH_PAD_DIR
 load_dotenv()
 
 
-class DeleteFileTool(BaseTool):
+class DeleteFile(BaseTool):
     """A tool for deleting a file based on a prompt."""
 
     prompt: str = Field(..., description="The prompt to identify which file to delete.")
@@ -75,5 +75,5 @@ def create_file_selection_prompt(available_files, user_prompt):
 if __name__ == "__main__":
     import asyncio
 
-    tool = DeleteFileTool(prompt="Delete the test file", force_delete=True)
+    tool = DeleteFile(prompt="Delete the test file", force_delete=True)
     print(asyncio.run(tool.run()))

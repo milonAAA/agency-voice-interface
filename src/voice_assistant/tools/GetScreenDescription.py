@@ -15,7 +15,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
-class GetScreenDescriptionTool(BaseTool):
+class GetScreenDescription(BaseTool):
     """Analyze the user's active window via screenshot using GPT-4o-mini."""
 
     prompt: str = Field(..., description="Prompt to analyze the screenshot")
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     import asyncio
 
     async def test_tool():
-        tool = GetScreenDescriptionTool(
+        tool = GetScreenDescription(
             prompt="What do you see in this screenshot? Describe the main elements."
         )
         try:
