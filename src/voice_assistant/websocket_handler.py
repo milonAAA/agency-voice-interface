@@ -128,8 +128,10 @@ async def process_ws_messages(websocket, mic, visual_interface):
                 logging.info("Calling stop_receiving()")
                 mic.stop_receiving()
                 visual_interface.set_active(False)
+                mic.start_recording()
+                logging.info("Started recording for next user input")
             elif event_type == "rate_limits.updated":
-                mic.is_recording = True
+                mic.start_recording()
                 logging.info("Resumed recording after rate_limits.updated")
             elif event_type == "error":
                 error_message = event.get("error", {}).get("message", "")
