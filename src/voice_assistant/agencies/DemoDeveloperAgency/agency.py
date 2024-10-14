@@ -8,7 +8,7 @@ developer_agent = Developer()
 virtual_assistant_agent = VirtualAssistant()
 
 
-developer_agency = Agency(
+agency = Agency(
     agency_chart=[
         developer_agent,
         [developer_agent, virtual_assistant_agent],

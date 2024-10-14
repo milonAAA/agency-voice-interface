@@ -34,6 +34,18 @@ logging.basicConfig(
 )
 
 
+def prepare_tool_schemas():
+    """Prepare the schemas for the tools."""
+    tool_schemas = []
+    for tool in TOOLS:
+        tool_schema = {k: v for k, v in tool.openai_schema.items() if k != "strict"}
+        tool_type = "function" if not hasattr(tool, "type") else tool.type
+        tool_schemas.append({**tool_schema, "type": tool_type})
+
+    print("Tool Schemas:\n", tool_schemas)
+    return tool_schemas
+
+
 async def realtime_api():
     while True:
         try:
@@ -53,14 +65,8 @@ async def realtime_api():
             mic = AsyncMicrophone()
             visual_interface = VisualInterface()
 
-            # Initialize tools separately
-            initialized_tools = []
-            for tool in TOOLS:
-                tool_schema = {
-                    k: v for k, v in tool.openai_schema.items() if k != "strict"
-                }
-                tool_type = "function" if not hasattr(tool, "type") else tool.type
-                initialized_tools.append({**tool_schema, "type": tool_type})
+            # Prepare tool schemas
+            tool_schemas = prepare_tool_schemas()
 
             async with websockets.connect(url, extra_headers=headers) as websocket:
                 logging.info("Connected to the server.")
@@ -79,7 +85,7 @@ async def realtime_api():
                             "prefix_padding_ms": PREFIX_PADDING_MS,
                             "silence_duration_ms": SILENCE_DURATION_MS,
                         },
-                        "tools": initialized_tools,
+                        "tools": tool_schemas,
                     },
                 }
                 log_ws_event("outgoing", session_update)
