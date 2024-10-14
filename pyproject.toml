@@ -9,6 +9,7 @@ dependencies = [
     "aiohttp>=3.10.10",
     "numpy",
     "openai",
+    "pillow>=10.4.0",
     "pyaudio",
     "pygame>=2.6.1",
     "websockets",

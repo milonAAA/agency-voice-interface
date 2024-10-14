@@ -3,6 +3,8 @@ import base64
 import os
 import tempfile
 from dotenv import load_dotenv
+from PIL import Image
+import io
 
 import aiohttp
 from agency_swarm.tools import BaseTool
@@ -26,7 +28,8 @@ class GetScreenDescription(BaseTool):
 
         try:
             file_content = await asyncio.to_thread(self._read_file, screenshot_path)
-            encoded_image = base64.b64encode(file_content).decode("utf-8")
+            resized_content = await asyncio.to_thread(self._resize_image, file_content)
+            encoded_image = base64.b64encode(resized_content).decode("utf-8")
             analysis = await self.analyze_image(encoded_image)
         finally:
             asyncio.create_task(asyncio.to_thread(os.remove, screenshot_path))
@@ -136,7 +139,7 @@ class GetScreenDescription(BaseTool):
                     ],
                 },
             ],
-            "max_tokens": 300,
+            "max_tokens": 500,
         }
 
         async with aiohttp.ClientSession() as session:
@@ -155,6 +158,14 @@ class GetScreenDescription(BaseTool):
         """Read and return the content of a file."""
         with open(path, "rb") as image_file:
             return image_file.read()
+
+    def _resize_image(self, image_data: bytes) -> bytes:
+        """Resize the image to reduce payload size while preserving aspect ratio."""
+        with Image.open(io.BytesIO(image_data)) as img:
+            img.thumbnail((1600, 1200), Image.ANTIALIAS)
+            with io.BytesIO() as output:
+                img.save(output, format="PNG")
+                return output.getvalue()
 
 
 if __name__ == "__main__":
