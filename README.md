@@ -32,13 +32,16 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 
 ## Setup
 
+### MacOS
+
 1. Install [uv](https://docs.astral.sh/uv/), the modern Python package manager.
 2. Clone this repository.
 3. Copy the sample environment file: `cp .env.sample .env`
 4. Add your `OPENAI_API_KEY` to the `.env` file.
-5. Update `personalization.json` with your preferred settings.
-6. Install dependencies: `uv sync`
-7. Run the assistant: `uv run main`
+5. Update `personalization.json` and `config.py` with your preferred settings.
+6. Install portaudio: `brew install portaudio`
+7. Install dependencies: `uv sync`
+8. Run the assistant: `uv run main`
 
 ## Usage
 
