@@ -100,9 +100,7 @@ async def realtime_api():
 
                 try:
                     while not exit_event.is_set():
-                        await asyncio.sleep(
-                            0.1
-                        )  # Small delay to accumulate some audio data
+                        await asyncio.sleep(0.01)  # Small delay to reduce CPU usage
                         if not mic.is_receiving:
                             audio_data = mic.get_audio_data()
                             if audio_data:
