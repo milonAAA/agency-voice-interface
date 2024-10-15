@@ -14,22 +14,6 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 - Browser interaction
 - Task delegation to AI agents
 
-## Project Status
-
-- [x] Standalone tools integration
-- [ ] Agency integration (in progress)
-
-## Todo Checklist
-
-- [x] Implement standalone tools
-- [ ] Complete agency integration
-- [ ] Implement interruption handling for smoother conversation flow
-- [ ] Add transcript logging for better conversation tracking
-- [ ] Convert `personalization.json` to a Pydantic model for improved type safety
-- [ ] Implement parallel execution of tools for increased efficiency
-- [ ] Fix audio cutoff issues near the end of responses
-- [ ] Enhance error handling and recovery mechanisms
-
 ## Setup
 
 ### MacOS
@@ -42,6 +26,14 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 6. Install portaudio: `brew install portaudio`
 7. Install dependencies: `uv sync`
 8. Run the assistant: `uv run main`
+
+## Configuration
+
+The project uses environment variables and a `personalization.json` file for configuration. Ensure that you have set up the following:
+
+- `OPENAI_API_KEY`: Your OpenAI API key
+- `PERSONALIZATION_FILE`: Path to your personalization JSON file
+- `SCRATCH_PAD_DIR`: Directory for temporary file storage
 
 ## Usage
 
@@ -81,13 +73,31 @@ Once the assistant is running, you can interact with it using voice commands. He
 5. **Visual Interface**:
    A PyGame-based visual interface provides real-time visualization of current audio volume.
 
-## Configuration
+## Adding New Tools and Agencies
 
-The project uses environment variables and a `personalization.json` file for configuration. Ensure that you have set up the following:
+### Adding New Tools
 
-- `OPENAI_API_KEY`: Your OpenAI API key
-- `PERSONALIZATION_FILE`: Path to your personalization JSON file
-- `SCRATCH_PAD_DIR`: Directory for temporary file storage
+To add a new tool:
+
+1. Place your tool file in the `tools/` directory.
+2. Implement the `run` method using async syntax. Use `asyncio.to_thread` for blocking operations.
+
+### Adding New Agencies
+
+To add a new agency:
+
+1. Create a new directory under `agencies/` named after your agency.
+2. Include all relevant agents and files, such as `agency.py`.
+
+## TODO Checklist
+
+- [x] Implement standalone tools
+- [x] Complete agency integration
+- [ ] Implement interruption handling for smoother conversation flow
+- [ ] Add transcript logging for better conversation tracking
+- [ ] Convert `personalization.json` to a Pydantic model for improved type safety
+- [ ] Implement parallel execution of tools for increased efficiency
+- [ ] Fix audio cutoff issues near the end of responses
 
 ## Resources
 
