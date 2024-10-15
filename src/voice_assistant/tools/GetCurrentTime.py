@@ -1,6 +1,7 @@
 import asyncio
-from agency_swarm.tools import BaseTool
 from datetime import datetime
+
+from agency_swarm.tools import BaseTool
 
 
 class GetCurrentTime(BaseTool):

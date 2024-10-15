@@ -1,9 +1,13 @@
 # src/voice_assistant/microphone.py
-import pyaudio
-import queue
 import logging
+import queue
 from typing import Optional
-from voice_assistant.config import FORMAT, CHANNELS, RATE, CHUNK
+
+import pyaudio
+
+from voice_assistant.config import CHANNELS, CHUNK, FORMAT, RATE
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncMicrophone:
@@ -20,7 +24,7 @@ class AsyncMicrophone:
         self.queue = queue.Queue()
         self.is_recording = False
         self.is_receiving = False
-        logging.info("AsyncMicrophone initialized")
+        logger.info("AsyncMicrophone initialized")
 
     def callback(self, in_data, frame_count, time_info, status):
         if self.is_recording and not self.is_receiving:
@@ -29,20 +33,20 @@ class AsyncMicrophone:
 
     def start_recording(self):
         self.is_recording = True
-        logging.info("Started recording")
+        logger.info("Started recording")
 
     def stop_recording(self):
         self.is_recording = False
-        logging.info("Stopped recording")
+        logger.info("Stopped recording")
 
     def start_receiving(self):
         self.is_receiving = True
         self.is_recording = False
-        logging.info("Started receiving assistant response")
+        logger.info("Started receiving assistant response")
 
     def stop_receiving(self):
         self.is_receiving = False
-        logging.info("Stopped receiving assistant response")
+        logger.info("Stopped receiving assistant response")
 
     def get_audio_data(self) -> Optional[bytes]:
         data = b""
@@ -54,4 +58,4 @@ class AsyncMicrophone:
         self.stream.stop_stream()
         self.stream.close()
         self.p.terminate()
-        logging.info("AsyncMicrophone closed")
+        logger.info("AsyncMicrophone closed")

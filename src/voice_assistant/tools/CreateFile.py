@@ -1,11 +1,13 @@
-from agency_swarm.tools import BaseTool
-from pydantic import Field
 import os
+
+from agency_swarm.tools import BaseTool
 from dotenv import load_dotenv
-from voice_assistant.decorators import timeit_decorator
-from voice_assistant.models import CreateFileResponse
-from voice_assistant.tools.utils import get_structured_output_completion
+from pydantic import Field
+
 from voice_assistant.config import SCRATCH_PAD_DIR
+from voice_assistant.models import CreateFileResponse
+from voice_assistant.utils.decorators import timeit_decorator
+from voice_assistant.utils.llm_utils import get_structured_output_completion
 
 load_dotenv()
 
@@ -44,7 +46,9 @@ async def create_file(file_name: str, prompt: str) -> dict:
     </instructions>
     """
 
-    response = get_structured_output_completion(prompt_structure, CreateFileResponse)
+    response = await get_structured_output_completion(
+        prompt_structure, CreateFileResponse
+    )
 
     with open(file_path, "w") as f:
         f.write(response.file_content)

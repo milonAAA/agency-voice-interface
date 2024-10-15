@@ -1,6 +1,7 @@
 import asyncio
-import websockets
 import os
+
+import websockets
 from dotenv import load_dotenv
 
 # Load environment variables from .env file

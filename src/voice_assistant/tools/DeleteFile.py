@@ -1,11 +1,13 @@
-from agency_swarm.tools import BaseTool
-from pydantic import Field
 import os
+
+from agency_swarm.tools import BaseTool
 from dotenv import load_dotenv
-from voice_assistant.decorators import timeit_decorator
-from voice_assistant.models import FileDeleteResponse
-from voice_assistant.tools.utils import get_structured_output_completion
+from pydantic import Field
+
 from voice_assistant.config import SCRATCH_PAD_DIR
+from voice_assistant.models import FileDeleteResponse
+from voice_assistant.utils.decorators import timeit_decorator
+from voice_assistant.utils.llm_utils import get_structured_output_completion
 
 load_dotenv()
 
@@ -28,7 +30,7 @@ async def delete_file(prompt: str, force_delete: bool = False) -> dict:
     available_files = os.listdir(SCRATCH_PAD_DIR)
 
     # Select file to delete based on user prompt
-    file_delete_response = get_structured_output_completion(
+    file_delete_response = await get_structured_output_completion(
         create_file_selection_prompt(available_files, prompt), FileDeleteResponse
     )
 

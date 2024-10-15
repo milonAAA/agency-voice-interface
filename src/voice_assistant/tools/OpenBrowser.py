@@ -1,14 +1,18 @@
-from agency_swarm.tools import BaseTool
-from pydantic import Field
+import asyncio
 import json
+import logging
 import os
 import webbrowser
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from voice_assistant.decorators import timeit_decorator
-from voice_assistant.tools.utils import get_structured_output_completion
+
+from agency_swarm.tools import BaseTool
+from pydantic import Field
+
 from voice_assistant.models import WebUrl
-import logging
+from voice_assistant.utils.decorators import timeit_decorator
+from voice_assistant.utils.llm_utils import get_structured_output_completion
+
+logger = logging.getLogger(__name__)
 
 
 class OpenBrowser(BaseTool):
@@ -48,10 +52,10 @@ class OpenBrowser(BaseTool):
     {self.prompt}
 </user-prompt>
         """
-        response = get_structured_output_completion(prompt_structure, WebUrl)
+        response = await get_structured_output_completion(prompt_structure, WebUrl)
 
         if response.url:
-            logging.info(f"📖 open_browser() Opening URL: {response.url}")
+            logger.info(f"📖 open_browser() Opening URL: {response.url}")
             loop = asyncio.get_running_loop()
             with ThreadPoolExecutor() as pool:
                 await loop.run_in_executor(

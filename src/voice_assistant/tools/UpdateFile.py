@@ -1,14 +1,16 @@
-from agency_swarm.tools import BaseTool
-from pydantic import Field
-import os
 import json
+import os
+
+from agency_swarm.tools import BaseTool
 from dotenv import load_dotenv
-from voice_assistant.decorators import timeit_decorator
-from voice_assistant.models import FileSelectionResponse, ModelName
+from pydantic import Field
+
 from voice_assistant.config import SCRATCH_PAD_DIR
-from voice_assistant.tools.utils import (
+from voice_assistant.models import FileSelectionResponse, ModelName
+from voice_assistant.utils.decorators import timeit_decorator
+from voice_assistant.utils.llm_utils import (
     get_structured_output_completion,
-    get_chat_completion,
+    parse_chat_completion,
 )
 
 load_dotenv()
@@ -34,7 +36,7 @@ async def update_file(prompt: str) -> dict:
     available_files = os.listdir(SCRATCH_PAD_DIR)
     available_model_map = {model.value: model.name for model in ModelName}
 
-    file_selection_response = get_structured_output_completion(
+    file_selection_response = await get_structured_output_completion(
         create_file_selection_prompt(
             available_files, json.dumps(available_model_map), prompt
         ),
@@ -51,7 +53,7 @@ async def update_file(prompt: str) -> dict:
     with open(file_path, "r") as f:
         file_content = f.read()
 
-    updated_content = get_chat_completion(
+    updated_content = await parse_chat_completion(
         create_file_update_prompt(selected_file, file_content, prompt),
         selected_model,
     )

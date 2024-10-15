@@ -1,8 +1,9 @@
-import pygame
 import asyncio
-import numpy as np
-from collections import deque
 import os
+from collections import deque
+
+import numpy as np
+import pygame
 
 
 class VisualInterface:
@@ -91,6 +92,12 @@ class VisualInterface:
             self.max_energy = current_max
         elif len(self.energy_queue) == self.energy_queue.maxlen:
             self.max_energy = max(self.energy_queue)
+
+    def process_audio_data(self, audio_data: bytes):
+        """Process and update audio energy for visualization."""
+        audio_frame = np.frombuffer(audio_data, dtype=np.int16)
+        energy = np.abs(audio_frame).mean()
+        self.update_energy(energy)
 
 
 async def run_visual_interface(interface):

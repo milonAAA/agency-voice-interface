@@ -14,6 +14,22 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 - Browser interaction
 - Task delegation to AI agents
 
+## Available Tools
+
+- **SendMessage**: Sends a message to a specified agent in a specified agency.
+
+- **GetGmailSummary**: Summarizes unread Gmail messages from the last two days.
+- **DraftGmail**: Drafts an email, either as a new message or a reply.
+- **GetScreenDescription**: Takes a screenshot and explains what's happening on the screen to the assistant.
+
+- **CreateFile**: Creates new files with specified content.
+- **UpdateFile**: Updates existing files with specified content.
+- **DeleteFile**: Deletes specified files.
+
+- **OpenBrowser**: Opens a specified URL in the browser.
+
+- **GetCurrentTime**: Provides the current time.
+
 ## Setup
 
 ### MacOS
@@ -26,6 +42,19 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 6. Install portaudio: `brew install portaudio`
 7. Install dependencies: `uv sync`
 8. Run the assistant: `uv run main`
+
+### Google Cloud API Integration
+
+To integrate with Google Cloud API, follow the standard steps for setting up OAuth 2.0. Ensure that:
+
+1. You have created OAuth 2.0 Client IDs in the Google Cloud Console.
+2. The `credentials.json` file is located in the current directory when running the tools/code.
+3. Add `http://localhost:8080/` to both Authorized JavaScript origins and Authorized redirect URIs in your Google Cloud project settings.
+4. On the OAuth consent screen, select "Internal" for the user type.
+5. Add the following scopes:
+    - `https://www.googleapis.com/auth/gmail.readonly`
+    - `https://www.googleapis.com/auth/gmail.compose`
+    - `https://www.googleapis.com/auth/gmail.modify`
 
 ## Configuration
 

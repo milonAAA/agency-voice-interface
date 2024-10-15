@@ -1,13 +1,13 @@
-# src/voice_assistant/websocket_handler.py
+import base64
 import json
 import logging
-import base64
 import time
+
 import websockets
 
-from voice_assistant.tools import TOOLS
-from voice_assistant.utils import log_ws_event, log_runtime
 from voice_assistant.audio import audio_player
+from voice_assistant.tools import TOOLS
+from voice_assistant.utils.log_utils import log_runtime, log_ws_event
 
 
 async def process_ws_messages(websocket, mic, visual_interface):

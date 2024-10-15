@@ -3,28 +3,26 @@ import asyncio
 import json
 import logging
 import os
+
+import pygame
 import websockets
 from websockets.exceptions import ConnectionClosedError
-import pygame
-import numpy as np
 
 from voice_assistant.config import (
-    SESSION_INSTRUCTIONS,
-    SILENCE_THRESHOLD,
     PREFIX_PADDING_MS,
+    SESSION_INSTRUCTIONS,
     SILENCE_DURATION_MS,
+    SILENCE_THRESHOLD,
 )
 from voice_assistant.microphone import AsyncMicrophone
-from voice_assistant.utils import (
-    log_ws_event,
-    base64_encode_audio,
-)
-from voice_assistant.websocket_handler import TOOLS, process_ws_messages
+from voice_assistant.tools import TOOL_SCHEMAS
+from voice_assistant.utils import base64_encode_audio
+from voice_assistant.utils.log_utils import log_ws_event
 from voice_assistant.visual_interface import (
     VisualInterface,
     run_visual_interface,
 )
-
+from voice_assistant.websocket_handler import process_ws_messages
 
 # Set up logging
 logging.basicConfig(
@@ -32,18 +30,6 @@ logging.basicConfig(
     format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
     datefmt="%H:%M:%S",
 )
-
-
-def prepare_tool_schemas():
-    """Prepare the schemas for the tools."""
-    tool_schemas = []
-    for tool in TOOLS:
-        tool_schema = {k: v for k, v in tool.openai_schema.items() if k != "strict"}
-        tool_type = "function" if not hasattr(tool, "type") else tool.type
-        tool_schemas.append({**tool_schema, "type": tool_type})
-
-    print("Tool Schemas:\n", tool_schemas)
-    return tool_schemas
 
 
 async def realtime_api():
@@ -65,9 +51,6 @@ async def realtime_api():
             mic = AsyncMicrophone()
             visual_interface = VisualInterface()
 
-            # Prepare tool schemas
-            tool_schemas = prepare_tool_schemas()
-
             async with websockets.connect(url, extra_headers=headers) as websocket:
                 logging.info("Connected to the server.")
                 # Initialize the session with voice capabilities and tools
@@ -85,7 +68,7 @@ async def realtime_api():
                             "prefix_padding_ms": PREFIX_PADDING_MS,
                             "silence_duration_ms": SILENCE_DURATION_MS,
                         },
-                        "tools": tool_schemas,
+                        "tools": TOOL_SCHEMAS,
                     },
                 }
                 log_ws_event("outgoing", session_update)
@@ -119,11 +102,7 @@ async def realtime_api():
                                     log_ws_event("outgoing", audio_event)
                                     await websocket.send(json.dumps(audio_event))
                                     # Update energy for visualization
-                                    audio_frame = np.frombuffer(
-                                        audio_data, dtype=np.int16
-                                    )
-                                    energy = np.abs(audio_frame).mean()
-                                    visual_interface.update_energy(energy)
+                                    visual_interface.process_audio_data(audio_data)
                                 else:
                                     logging.debug("No audio data to send")
                 except KeyboardInterrupt:

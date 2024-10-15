@@ -3,7 +3,6 @@ from agency_swarm import Agency
 from .Developer.Developer import Developer
 from .VirtualAssistant.VirtualAssistant import VirtualAssistant
 
-
 developer_agent = Developer()
 virtual_assistant_agent = VirtualAssistant()
 

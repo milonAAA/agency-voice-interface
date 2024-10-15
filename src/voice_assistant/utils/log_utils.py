@@ -1,13 +1,10 @@
-# src/voice_assistant/utils.py
-import base64
 import json
 import logging
 from datetime import datetime
+
 from voice_assistant.config import RUN_TIME_TABLE_LOG_JSON
 
-
-def base64_encode_audio(audio_bytes: bytes) -> str:
-    return base64.b64encode(audio_bytes).decode("utf-8")
+logger = logging.getLogger(__name__)
 
 
 def log_runtime(function_or_name: str, duration: float):
@@ -20,7 +17,7 @@ def log_runtime(function_or_name: str, duration: float):
         json.dump(time_record, file)
         file.write("\n")
 
-    logging.info(f"⏰ {function_or_name}() took {duration:.4f} seconds")
+    logger.info(f"⏰ {function_or_name}() took {duration:.4f} seconds")
 
 
 def log_ws_event(direction: str, event: dict):
@@ -60,4 +57,4 @@ def log_ws_event(direction: str, event: dict):
     }
     emoji = event_emojis.get(event_type, "❓")
     icon = "⬆️ - Out" if direction.lower() == "outgoing" else "⬇️ - In"
-    logging.info(f"{emoji} {icon} {event_type}")
+    logger.info(f"{emoji} {icon} {event_type}")

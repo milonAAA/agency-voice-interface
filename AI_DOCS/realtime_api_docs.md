@@ -294,12 +294,12 @@ async function audioToItemCreateEvent(audioFile) {
   const channelData = audioBuffer.getChannelData(0);
   const base64AudioData = base64EncodeAudio(channelData);
   return {
-    type: 'conversation.item.create', 
+    type: 'conversation.item.create',
     item: {
       type: 'message',
       role: 'user',
       content: [{
-        type: 'input_audio', 
+        type: 'input_audio',
         audio: base64AudioData
       }]
     }

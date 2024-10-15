@@ -8,9 +8,9 @@ import asyncio
 
 from agency_swarm.tools import BaseTool
 from pydantic import Field
-from voice_assistant.agencies import AGENCIES
-from voice_assistant.decorators import timeit_decorator
 
+from voice_assistant.agencies import AGENCIES
+from voice_assistant.utils.decorators import timeit_decorator
 
 # Dynamically update the class docstring with the list of agencies and their agents
 agency_agents = "\n".join(

@@ -1,8 +1,9 @@
 # src/voice_assistant/config.py
-import os
 import json
-from dotenv import load_dotenv
+import os
+
 import pyaudio
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()

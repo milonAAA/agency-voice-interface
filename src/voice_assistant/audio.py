@@ -1,9 +1,11 @@
-# src/voice_assistant/audio.py
-import pyaudio
 import asyncio
 import logging
-import numpy as np
-from voice_assistant.config import FORMAT, CHANNELS, RATE
+
+import pyaudio
+
+from voice_assistant.config import CHANNELS, FORMAT, RATE
+
+logger = logging.getLogger(__name__)
 
 
 class AudioPlayer:
@@ -23,9 +25,7 @@ class AudioPlayer:
         self.stream.write(audio_chunk)
 
         # Update energy for visualization
-        audio_array = np.frombuffer(audio_chunk, dtype=np.int16)
-        energy = np.abs(audio_array).mean()
-        visual_interface.update_energy(energy)
+        visual_interface.process_audio_data(audio_chunk)
 
         # Allow other tasks to run
         await asyncio.sleep(0)
@@ -43,7 +43,7 @@ class AudioPlayer:
             self.stream.stop_stream()
             self.is_playing = False
             visual_interface.set_assistant_speaking(False)
-            logging.debug("Audio playback completed")
+            logger.debug("Audio playback completed")
 
     def close(self):
         self.stream.close()
