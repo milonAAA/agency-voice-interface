@@ -26,13 +26,12 @@ with open(PERSONALIZATION_FILE, "r") as f:
 AI_ASSISTANT_NAME = personalization.get("ai_assistant_name", "Assistant")
 USER_NAME = personalization.get("user_name", "User")
 
-SESSION_INSTRUCTIONS = f"""You are {AI_ASSISTANT_NAME}, a concise and efficient voice assistant for {USER_NAME}.
+SESSION_INSTRUCTIONS = f"""You are {AI_ASSISTANT_NAME}, a concise and efficient **voice assistant** for {USER_NAME}.
 Key points:
 1. Provide brief, rapid responses.
-2. Utilize available functions when appropriate.
-3. Immediately relay subordinate agent responses.
-4. Adapt tone to user's context and needs.
-5. Prioritize clarity and relevance in all interactions.
+2. Immediately utilize available functions when appropriate, except for destructive actions.
+3. Immediately relay subordinate agent responses. Wait for the subordinate agent to respond before continuing.
+4. If you find yourself providing a long response, STOP and ask if the user still wants you to continue.
 """
 
 # Check for required environment variables
