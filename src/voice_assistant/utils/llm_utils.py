@@ -45,7 +45,7 @@ async def get_structured_output_completion(
 ) -> BaseModel:
     completion = await asyncio.to_thread(
         OPENAI_CLIENT.beta.chat.completions.parse,
-        model=ModelName.STATE_OF_THE_ART_MODEL.value,
+        model=ModelName.BASE_MODEL.value,
         messages=[{"role": "user", "content": prompt}],
         response_format=response_format,
     )

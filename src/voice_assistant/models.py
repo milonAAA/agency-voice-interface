@@ -5,10 +5,10 @@ from pydantic import BaseModel
 
 
 class ModelName(StrEnum):
-    STATE_OF_THE_ART_MODEL = "gpt-4o"
-    REASONING_MODEL = "o1-mini"
     BASE_MODEL = "gpt-4o"
     FAST_MODEL = "gpt-4o-mini"
+    REASONING_MODEL_LARGE = "o1-preview"
+    REASONING_MODEL_SMALL = "o1-mini"
 
 
 class WebUrl(BaseModel):
