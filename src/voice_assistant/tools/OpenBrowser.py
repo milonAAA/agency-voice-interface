@@ -4,22 +4,28 @@ import logging
 import os
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor
+from enum import Enum
 
 from agency_swarm.tools import BaseTool
 from pydantic import Field
 
 from voice_assistant.models import WebUrl
 from voice_assistant.utils.decorators import timeit_decorator
-from voice_assistant.utils.llm_utils import get_structured_output_completion
 
 logger = logging.getLogger(__name__)
 
+with open(os.getenv("PERSONALIZATION_FILE")) as f:
+    personalization = json.load(f)
+browser_urls = personalization["browser_urls"]
+browser = personalization["browser"]
 
 class OpenBrowser(BaseTool):
     """A tool to open a browser with a URL based on the user's prompt."""
-
-    prompt: str = Field(
-        ..., description="The user's prompt to determine which URL to open."
+    chain_of_thought: str = Field(
+        ..., description="Step-by-step thought process to determine the URL to open."
+    )
+    url: str = Field(
+        ..., description="The URL to open. Available options: " + ", ".join(browser_urls)
     )
 
     @timeit_decorator
@@ -27,42 +33,17 @@ class OpenBrowser(BaseTool):
         """
         Open a browser with the best-fitting URL based on the user's prompt.
         """
-        with open(os.getenv("PERSONALIZATION_FILE")) as f:
-            personalization = json.load(f)
-        browser_urls = personalization["browser_urls"]
-        browser = personalization["browser"]
-
-        prompt_structure = f"""
-<purpose>
-    Select a browser URL from the list of browser URLs based on the user's prompt.
-</purpose>
-
-<instructions>
-    <instruction>Infer the browser URL that the user wants to open from the user-prompt and the list of browser URLs.</instruction>
-    <instruction>If the user-prompt is not related to the browser URLs, return an empty string.</instruction>
-</instructions>
-
-<browser-urls>
-    {", ".join(browser_urls)}
-</browser-urls>
-
-<user-prompt>
-    {self.prompt}
-</user-prompt>
-        """
-        response = await get_structured_output_completion(prompt_structure, WebUrl)
-
-        if response.url:
-            logger.info(f"📖 open_browser() Opening URL: {response.url}")
+        if self.url:
+            logger.info(f"📖 open_browser() Opening URL: {self.url}")
             loop = asyncio.get_running_loop()
             with ThreadPoolExecutor() as pool:
                 await loop.run_in_executor(
-                    pool, webbrowser.get(browser).open, response.url
+                    pool, webbrowser.get(browser).open, self.url
                 )
-            return {"status": "Browser opened", "url": response.url}
+            return {"status": "Browser opened", "url": self.url}
         return {"status": "No URL found"}
 
 
 if __name__ == "__main__":
-    tool = OpenBrowser(prompt="Open my favorite website")
+    tool = OpenBrowser(chain_of_thought="I want to open my favorite website", url="https://www.linkedin.com")
     asyncio.run(tool.run())
