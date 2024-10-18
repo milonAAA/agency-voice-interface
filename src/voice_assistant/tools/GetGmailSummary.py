@@ -19,12 +19,11 @@ load_dotenv()
 
 
 class GetGmailSummary(BaseTool):
-    """
-    A tool to summarize unread Gmail messages from the last two days.
-    """
+    """A tool to summarize unread Gmail messages from the last two days."""
 
     max_results: int = Field(
-        default=10, description="Maximum number of emails to fetch."
+        default=10,
+        description="Maximum number of unread emails to fetch. Defaults to 10.",
     )
     _service: Optional[GoogleServicesUtils] = PrivateAttr(None)
 

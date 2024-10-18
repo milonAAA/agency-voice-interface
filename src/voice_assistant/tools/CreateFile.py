@@ -13,9 +13,7 @@ load_dotenv()
 
 
 class CreateFile(BaseTool):
-    """
-    A tool for creating a new file with generated content based on a prompt.
-    """
+    """A tool for creating a new file with generated content based on a prompt."""
 
     file_name: str = Field(..., description="The name of the file to be created.")
     prompt: str = Field(

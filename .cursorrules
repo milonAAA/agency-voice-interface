@@ -40,10 +40,7 @@ voice_assistant/
 │   │   └── agency_manifesto.md
 │   └── ...
 ├── tools/
-│   ├── GetCurrentTime.py
-│   ├── DeleteFileTool.py
-│   ├── CreateFileTool.py
-│   ├── OpenBrowser.py
+│   ├── ToolName.py
 │   └── ...
 ```
 
@@ -353,7 +350,7 @@ If you find yourself about to output code in the chat, STOP and reconsider your 
 To reiterate the distinction, the `/tools` directory contains standalone tools that are adapted from Agency-Swarm standards but are not directly part of any specific agent or agency. When developing these tools:
 
 1. Place all standalone tools in the `src/voice_assistant/tools/` directory.
-2. Each tool should be in its own file, named after the tool class (e.g., `GetCurrentTime.py` for `GetCurrentTime` class).
+2. Each tool should be in its own file, named after the tool class (e.g., `GetCurrentDateTime.py` for `GetCurrentDateTime` class).
 3. Tools must inherit from `BaseTool` from `agency_swarm.tools`.
 4. Use async syntax for the `run` method.
 5. For synchronous operations within async tools, use `asyncio.to_thread`.

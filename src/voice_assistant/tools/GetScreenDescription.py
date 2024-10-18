@@ -14,7 +14,7 @@ from voice_assistant.utils.llm_utils import get_model_completion
 
 
 class GetScreenDescription(BaseTool):
-    """Analyze the user's active window via screenshot using GPT-4o-mini."""
+    """Get a text description of the user's active window."""
 
     prompt: str = Field(..., description="Prompt to analyze the screenshot")
 

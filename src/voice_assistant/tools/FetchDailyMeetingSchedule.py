@@ -13,26 +13,24 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-class GetMeetingAgenda(BaseTool):
-    """
-    A tool to fetch and prioritize the CEO's daily meeting agenda.
-    """
+class FetchDailyMeetingSchedule(BaseTool):
+    """A tool to fetch and format the user's daily meeting schedule from Google Calendar."""
 
     date: str = Field(
         default_factory=lambda: datetime.now(UTC).strftime("%Y-%m-%d"),
-        description="The date for which to fetch the meeting agenda. Defaults to today if not provided.",
+        description="The date for which to fetch the meeting schedule. Defaults to today if not provided.",
     )
 
-    async def run(self):
+    async def run(self) -> str:
         try:
             meetings = await self.fetch_meetings(self.date)
             formatted_meetings = self.format_meetings(meetings)
             return formatted_meetings
         except Exception as e:
-            logger.error(f"Error in GetMeetingAgenda: {str(e)}")
-            return f"An error occurred while fetching the meeting agenda: {str(e)}"
+            logger.error(f"Error in FetchDailyMeetingSchedule: {str(e)}")
+            return f"An error occurred while fetching the meeting schedule: {str(e)}"
 
-    async def fetch_meetings(self, date):
+    async def fetch_meetings(self, date) -> list[dict]:
         service = await GoogleServicesUtils.authenticate_service("calendar")
         events_result = await asyncio.to_thread(
             service.events()
@@ -47,7 +45,7 @@ class GetMeetingAgenda(BaseTool):
         )
         return events_result.get("items", [])
 
-    def format_meetings(self, meetings):
+    def format_meetings(self, meetings) -> str:
         formatted = []
         for meeting in meetings:
             start_time = datetime.fromisoformat(
@@ -75,8 +73,6 @@ class GetMeetingAgenda(BaseTool):
 
 
 if __name__ == "__main__":
-    import asyncio
-
-    tool = GetMeetingAgenda()
+    tool = FetchDailyMeetingSchedule()
     result = asyncio.run(tool.run())
     print(result)

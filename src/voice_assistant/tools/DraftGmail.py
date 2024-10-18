@@ -12,9 +12,7 @@ from voice_assistant.utils.google_services_utils import GoogleServicesUtils
 
 
 class DraftGmail(BaseTool):
-    """
-    A tool to draft an email. Either reply_to_id or recipient must be provided.
-    """
+    """A tool to draft an email. Either reply_to_id or recipient must be provided."""
 
     subject: Optional[str] = Field(None, description="Subject of the email")
     content: str = Field(..., description="Content of the email")

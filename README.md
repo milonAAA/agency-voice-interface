@@ -13,11 +13,14 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 - File management capabilities (create, update, delete)
 - Browser interaction for web-related tasks
 - Task delegation to multiple teams of AI agents
+- Google Calendar integration
+- Gmail integration
 
 ## Available Tools
 
 - **SendMessage**: Delegates tasks to agencies, or to specific agents within agencies.
 
+- **FetchDailyMeetingSchedule**: Fetches and formats the user's daily meeting schedule from Google Calendar.
 - **GetGmailSummary**: Provides a concise summary of unread Gmail messages from the past 48 hours.
 - **DraftGmail**: Composes email drafts, either as a reply to an email from GetGmailSummary, or as a new message.
 - **GetScreenDescription**: Captures and analyzes the current screen content for the assistant.
@@ -27,7 +30,7 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 - **DeleteFile**: Removes specified files from the system.
 
 - **OpenBrowser**: Launches a web browser with a given URL.
-- **GetCurrentTime**: Retrieves and reports the current time.
+- **GetCurrentDateTime**: Retrieves and reports the current date and time.
 
 ## Setup
 
@@ -70,11 +73,12 @@ The project relies on environment variables and a `personalization.json` file fo
 
 After launching the assistant, interact using voice commands. Example interactions:
 
-1. "What time is it now?"
-2. "Open ChatGPT in my browser."
-3. "Create a new file named user_data.txt with some example content."
-4. "Update the user_data.txt file by adding more information."
-5. "Delete the user_data.txt file."
+1. "What do I have on my schedule for today? Tell me only most important meetings."
+2. "Do I have any important emails?"
+3. "Open ChatGPT in my browser."
+4. "Create a new file named user_data.txt with some example content."
+5. "Update the user_data.txt file by adding more information."
+6. "Delete the user_data.txt file."
 
 ## Code Structure
 

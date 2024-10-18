@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenBrowser(BaseTool):
-    """
-    A tool to open a browser with a URL based on the user's prompt.
-    """
+    """A tool to open a browser with a URL based on the user's prompt."""
 
     prompt: str = Field(
         ..., description="The user's prompt to determine which URL to open."
