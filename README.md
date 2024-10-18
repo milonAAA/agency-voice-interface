@@ -50,10 +50,13 @@ To enable Google Cloud API integration, follow these steps:
 2. Place the `credentials.json` file in the project's root directory.
 3. Configure `http://localhost:8080/` as an Authorized Redirect URI in your Google Cloud project settings.
 4. Set the OAuth consent screen to "Internal" user type.
-5. Enable the following API scopes:
-   - `https://www.googleapis.com/auth/gmail.readonly`
-   - `https://www.googleapis.com/auth/gmail.compose`
-   - `https://www.googleapis.com/auth/gmail.modify`
+5. Enable the following APIs and scopes in your Google Cloud project:
+   - Gmail API
+     - `https://www.googleapis.com/auth/gmail.readonly`
+     - `https://www.googleapis.com/auth/gmail.compose`
+     - `https://www.googleapis.com/auth/gmail.modify`
+   - Google Calendar API
+     - `https://www.googleapis.com/auth/calendar.readonly`
 
 ## Configuration
 
