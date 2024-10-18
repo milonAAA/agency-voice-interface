@@ -21,7 +21,7 @@ This document provides comprehensive instructions for developing tools and agent
 The Voice Assistant project is organized as follows:
 
 ```
-voice_assistant/
+src/voice_assistant/
 ├── agencies/
 │   ├── agency_name/
 │   │   ├── agent_name/
@@ -49,6 +49,7 @@ voice_assistant/
 It's crucial to understand the distinction between standalone tools and Agency Swarm agencies within this project:
 
 1. **Standalone Tools (/tools directory):**
+
    - Located in the `/tools` directory
    - Must be adapted from Agency-Swarm standards
    - Developed as individual, reusable components
