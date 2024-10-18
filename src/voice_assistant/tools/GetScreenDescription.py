@@ -1,16 +1,21 @@
 import asyncio
 import base64
-import io
 import os
 import tempfile
-
-from agency_swarm.tools import BaseTool
+from dotenv import load_dotenv
 from PIL import Image
+import io
+
+import aiohttp
+from agency_swarm.tools import BaseTool
 from pydantic import Field
 
+from voice_assistant.decorators import timeit_decorator
 from voice_assistant.models import ModelName
-from voice_assistant.utils.decorators import timeit_decorator
-from voice_assistant.utils.llm_utils import get_model_completion
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
 class GetScreenDescription(BaseTool):
@@ -107,14 +112,48 @@ class GetScreenDescription(BaseTool):
     @timeit_decorator
     async def analyze_image(self, base64_image: str) -> str:
         """Send the encoded image and prompt to the OpenAI API for analysis."""
-        prompt = (
-            "You are an expert at analyzing screenshots and describing their content. "
-            "Your output should be a concise and informative description of the screenshot, "
-            "focusing on the aspects mentioned in the user's prompt. Pay close attention to "
-            "the specific questions or elements the user is asking about. "
-            f"Analyze this screenshot, paying particular attention to the following prompt: {self.prompt}"
-        )
-        return await get_model_completion(prompt, ModelName.FAST_MODEL)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+        }
+
+        payload = {
+            "model": ModelName.FAST_MODEL,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are an expert at analyzing screenshots and describing their content. Your output should be a concise and informative description of the screenshot, focusing on the aspects mentioned in the user's prompt. Pay close attention to the specific questions or elements the user is asking about.",
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"Analyze this screenshot, paying particular attention to the following prompt: {self.prompt}",
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            },
+                        },
+                    ],
+                },
+            ],
+            "max_tokens": 500,
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+            ) as response:
+                if response.status != 200:
+                    error = await response.text()
+                    raise RuntimeError(f"OpenAI API error: {error}")
+                result = await response.json()
+                return result["choices"][0]["message"]["content"]
 
     def _read_file(self, path: str) -> bytes:
         """Read and return the content of a file."""
