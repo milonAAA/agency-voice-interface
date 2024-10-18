@@ -296,8 +296,8 @@ To create an agency, import `Agency` from `agency_swarm` and create a class that
 ```python
 from agency_swarm import Agency
 from CEO import CEO
-from Developer import Developer
-from VirtualAssistant import VirtualAssistant
+from .developers.developer import Developer
+from .virtual_assistants.virtual_assistant import VirtualAssistant
 
 dev = Developer()
 va = VirtualAssistant()
