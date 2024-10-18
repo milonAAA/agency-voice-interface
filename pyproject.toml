@@ -16,6 +16,9 @@ dependencies = [
     "pyaudio",
     "pygame>=2.6.1",
     "python-dotenv>=1.0.1",
+    "selenium-stealth>=1.0.6",
+    "selenium>=4.25.0",
+    "webdriver-manager>=4.0.2",
     "websockets",
 ]
 

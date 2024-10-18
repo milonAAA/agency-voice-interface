@@ -76,14 +76,14 @@ SendMessage.__doc__ = SendMessage.__doc__.format(agency_agents=agency_agents)
 if __name__ == "__main__":
     tool = SendMessage(
         message="Hello, how are you?",
-        agency_name="DemoDeveloperAgency",
-        agent_name="Virtual Assistant",
+        agency_name="ResearchAgency",
+        agent_name="BrowsingAgent",
     )
     print(asyncio.run(tool.run()))
 
     tool = SendMessage(
         message="Hello, how are you?",
-        agency_name="DemoDeveloperAgency",
+        agency_name="ResearchAgency",
         agent_name=None,
     )
     print(asyncio.run(tool.run()))
