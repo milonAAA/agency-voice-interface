@@ -26,13 +26,10 @@ with open(PERSONALIZATION_FILE, "r") as f:
 AI_ASSISTANT_NAME = personalization.get("ai_assistant_name", "Assistant")
 USER_NAME = personalization.get("user_name", "User")
 
-SESSION_INSTRUCTIONS = f"""You are {AI_ASSISTANT_NAME}, a concise and efficient **voice assistant** for {USER_NAME}.
-Key points:
-1. Provide brief, rapid responses.
-2. Immediately utilize available functions when appropriate, except for destructive actions.
-3. Immediately relay subordinate agent responses. Wait for the subordinate agent to respond before continuing.
-4. If you find yourself providing a long response, STOP and ask if the user still wants you to continue.
-"""
+# Load assistant instructions from personalization file
+SESSION_INSTRUCTIONS = personalization.get("assistant_instructions", "").format(
+    ai_assistant_name=AI_ASSISTANT_NAME, user_name=USER_NAME
+)
 
 # Check for required environment variables
 REQUIRED_ENV_VARS = ["OPENAI_API_KEY", "PERSONALIZATION_FILE", "SCRATCH_PAD_DIR"]
