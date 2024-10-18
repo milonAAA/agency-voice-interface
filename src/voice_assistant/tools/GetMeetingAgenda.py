@@ -6,7 +6,7 @@ from agency_swarm.tools import BaseTool
 from dotenv import load_dotenv
 from pydantic import Field
 
-from voice_assistant.utils.calendar_utils import CalendarUtils
+from voice_assistant.utils.google_services_utils import GoogleServicesUtils
 
 load_dotenv()
 
@@ -33,7 +33,7 @@ class GetMeetingAgenda(BaseTool):
             return f"An error occurred while fetching the meeting agenda: {str(e)}"
 
     async def fetch_meetings(self, date):
-        service = await CalendarUtils.authenticate_calendar()
+        service = await GoogleServicesUtils.authenticate_service("calendar")
         events_result = await asyncio.to_thread(
             service.events()
             .list(

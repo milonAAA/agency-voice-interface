@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from agency_swarm.tools import BaseTool
 from pydantic import Field, PrivateAttr
 
-from voice_assistant.utils.gmail_utils import GmailUtils
+from voice_assistant.utils.google_services_utils import GoogleServicesUtils
 
 
 class DraftGmail(BaseTool):
@@ -23,16 +23,10 @@ class DraftGmail(BaseTool):
         description="Recipient of the email. If not provided, the email will be sent to the recipient in the reply_to_id",
     )
     reply_to_id: Optional[str] = Field(None, description="ID of the email to reply to")
-    _service: Optional[GmailUtils] = PrivateAttr(None)
+    _service: Optional[GoogleServicesUtils] = PrivateAttr(None)
 
     async def run(self) -> Dict[str, Any]:
-        self._service = await GmailUtils.authenticate_gmail(
-            scopes=[
-                "https://www.googleapis.com/auth/gmail.compose",
-                "https://www.googleapis.com/auth/gmail.readonly",
-                "https://www.googleapis.com/auth/gmail.modify",
-            ]
-        )
+        self._service = await GoogleServicesUtils.authenticate_service("gmail")
         return await self.draft_email()
 
     async def draft_email(self) -> Dict[str, Any]:
