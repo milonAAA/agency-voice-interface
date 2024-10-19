@@ -37,6 +37,10 @@ class GetGmailSummary(BaseTool):
         logger.info("Fetching unread messages.")
         messages = await self._fetch_unread_messages()
 
+        if not messages:
+            logger.info("No unread messages found.")
+            return "No unread Gmail messages found in the last two days."
+
         logger.info("Summarizing messages using GPT-4o-mini.")
         summary = await self._summarize_messages_with_gpt(messages)
 
