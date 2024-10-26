@@ -94,9 +94,6 @@ async def realtime_api():
                         if not mic.is_receiving:
                             audio_data = mic.get_audio_data()
                             if audio_data:
-                                logger.info(
-                                    f"Sending {len(audio_data)} bytes of audio data"
-                                )
                                 base64_audio = base64_encode_audio(audio_data)
                                 if base64_audio:
                                     audio_event = {
@@ -108,9 +105,7 @@ async def realtime_api():
                                     # Update energy for visualization
                                     visual_interface.process_audio_data(audio_data)
                                 else:
-                                    logger.info("No audio data to send")
-                        else:
-                            logger.info("Not receiving audio data")
+                                    logger.debug("No audio data to send")
                 except KeyboardInterrupt:
                     logger.info("Keyboard interrupt received. Closing the connection.")
                 except Exception as e:
