@@ -30,6 +30,7 @@ logging.basicConfig(
     format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s",
     datefmt="%H:%M:%S",
 )
+logger = logging.getLogger(__name__)
 
 
 async def realtime_api():
@@ -37,7 +38,7 @@ async def realtime_api():
         try:
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                logging.error("Please set the OPENAI_API_KEY in your .env file.")
+                logger.error("Please set the OPENAI_API_KEY in your .env file.")
                 return
 
             exit_event = asyncio.Event()
@@ -52,7 +53,7 @@ async def realtime_api():
             visual_interface = VisualInterface()
 
             async with websockets.connect(url, extra_headers=headers) as websocket:
-                logging.info("Connected to the server.")
+                logger.info("Connected to the server.")
                 # Initialize the session with voice capabilities and tools
                 session_update = {
                     "type": "session.update",
@@ -81,11 +82,11 @@ async def realtime_api():
                     run_visual_interface(visual_interface)
                 )
 
-                logging.info(
+                logger.info(
                     "Conversation started. Speak freely, and the assistant will respond."
                 )
                 mic.start_recording()
-                logging.info("Recording started. Listening for speech...")
+                logger.info("Recording started. Listening for speech...")
 
                 try:
                     while not exit_event.is_set():
@@ -93,6 +94,9 @@ async def realtime_api():
                         if not mic.is_receiving:
                             audio_data = mic.get_audio_data()
                             if audio_data:
+                                logger.info(
+                                    f"Sending {len(audio_data)} bytes of audio data"
+                                )
                                 base64_audio = base64_encode_audio(audio_data)
                                 if base64_audio:
                                     audio_event = {
@@ -104,11 +108,13 @@ async def realtime_api():
                                     # Update energy for visualization
                                     visual_interface.process_audio_data(audio_data)
                                 else:
-                                    logging.debug("No audio data to send")
+                                    logger.info("No audio data to send")
+                        else:
+                            logger.info("Not receiving audio data")
                 except KeyboardInterrupt:
-                    logging.info("Keyboard interrupt received. Closing the connection.")
+                    logger.info("Keyboard interrupt received. Closing the connection.")
                 except Exception as e:
-                    logging.exception(
+                    logger.exception(
                         f"An unexpected error occurred in the main loop: {e}"
                     )
                 finally:
@@ -156,9 +162,9 @@ def main():
     try:
         asyncio.run(main_async())
     except KeyboardInterrupt:
-        logging.info("Program terminated by user")
+        logger.info("Program terminated by user")
     except Exception as e:
-        logging.exception(f"An unexpected error occurred: {e}")
+        logger.exception(f"An unexpected error occurred: {e}")
 
 
 if __name__ == "__main__":
