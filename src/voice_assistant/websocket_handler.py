@@ -139,7 +139,6 @@ async def process_ws_messages(websocket, mic, visual_interface):
                 visual_interface.set_active(False)
 
                 response_start_time = time.perf_counter()
-                await websocket.send(json.dumps({"type": "input_audio_buffer.commit"}))
         except websockets.ConnectionClosed:
             logger.warning("WebSocket connection closed")
             break
