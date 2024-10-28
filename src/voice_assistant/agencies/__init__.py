@@ -24,3 +24,9 @@ def load_agencies() -> dict[str, Agency]:
 
 # Load all agencies
 AGENCIES: dict[str, Agency] = load_agencies()
+
+AGENCIES_AND_AGENTS_STRING = "\n".join(
+    f"Agency '{agency_name}' has the following agents: {', '.join(agent.name for agent in agency.agents)}"
+    for agency_name, agency in AGENCIES.items()
+)
+print("Available Agencies and Agents:\n", AGENCIES_AND_AGENTS_STRING)  # Debug print

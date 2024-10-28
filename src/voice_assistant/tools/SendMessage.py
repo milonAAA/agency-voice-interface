@@ -1,5 +1,5 @@
 """
-This tool allows you to send a message to a specific agent within a specified agency.
+This tool allows you to send a message to a specific agent within a specified agency and receive a response.
 
 To use this tool, provide the message you want to send, the name of the agency to which the agent belongs, and optionally the name of the agent to whom the message should be sent. If the agent name is not specified, the message will be sent to the default agent for that agency.
 """
@@ -9,20 +9,21 @@ import asyncio
 from agency_swarm.tools import BaseTool
 from pydantic import Field
 
-from voice_assistant.agencies import AGENCIES
+from voice_assistant.agencies import AGENCIES, AGENCIES_AND_AGENTS_STRING
 from voice_assistant.utils.decorators import timeit_decorator
-
-# Dynamically update the class docstring with the list of agencies and their agents
-agency_agents = "\n".join(
-    f"Agency '{agency_name}' has the following agents: {', '.join(agent.name for agent in agency.agents)}"
-    for agency_name, agency in AGENCIES.items()
-)
-print("Available Agencies and Agents:\n", agency_agents)  # Debug print
 
 
 class SendMessage(BaseTool):
     """
-    A tool for sending a message to a specific agency and agent.
+    Sends a message to a specific agent within a specified agency and waits for an immediate response.
+
+    Use this tool for direct, synchronous communication with agents for tasks that can be completed quickly.
+    The agent processes the message and returns a response immediately.
+    If 'agent_name' is not provided, the message is sent to the main agent in the agency.
+
+    To continue the dialogue, invoke this tool again with your follow-up message.
+    Note: You are responsible for relaying the agent's responses back to the user.
+    Do not send more than one message at a time.
 
     Available Agencies and Agents:
     {agency_agents}
@@ -42,10 +43,10 @@ class SendMessage(BaseTool):
 
     @timeit_decorator
     async def run(self) -> str:
-        result = await self.send_message()
+        result = await self._send_message()
         return str(result)
 
-    async def send_message(self) -> str:
+    async def _send_message(self) -> str:
         agency = AGENCIES.get(self.agency_name)
         if agency:
             recipient_agent = None
@@ -57,9 +58,8 @@ class SendMessage(BaseTool):
                 if not recipient_agent:
                     return f"Agent '{self.agent_name}' not found in agency '{self.agency_name}'. Available agents: {', '.join(agent.name for agent in agency.agents)}"
             else:
-                recipient_agent = agency.agents[0] if agency.agents else None
-                if not recipient_agent:
-                    return f"No default agent available in agency '{self.agency_name}'"
+                recipient_agent = None
+
             response = await asyncio.to_thread(
                 agency.get_completion,
                 message=self.message,
@@ -70,8 +70,11 @@ class SendMessage(BaseTool):
             return f"Agency '{self.agency_name}' not found"
 
 
-# Update the class docstring with the list of agencies and their agents
-SendMessage.__doc__ = SendMessage.__doc__.format(agency_agents=agency_agents)
+# Dynamically update the class docstring with the list of agencies and their agents
+SendMessage.__doc__ = SendMessage.__doc__.format(
+    agency_agents=AGENCIES_AND_AGENTS_STRING
+)
+
 
 if __name__ == "__main__":
     tool = SendMessage(

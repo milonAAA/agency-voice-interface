@@ -65,7 +65,9 @@ async def process_ws_messages(websocket, mic, visual_interface):
                         try:
                             tool_instance = tool(**args)
                             result = await tool_instance.run()
-                            logger.info(f"🛠️ Function call result: {result}")
+                            logger.info(
+                                f"🛠️ Function {function_name} call result: {result}"
+                            )
                         except Exception as e:
                             logger.error(
                                 f"Error calling function {function_name}: {str(e)}"

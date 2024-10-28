@@ -1,20 +1,4 @@
 {
-  "browser_urls": [
-    "https://www.linkedin.com",
-    "https://www.forbes.com",
-    "https://www.economist.com",
-    "https://www.bloomberg.com",
-    "https://www.wsj.com",
-    "https://www.ft.com",
-    "https://www.mckinsey.com",
-    "https://www.cnbc.com",
-    "https://www.hbr.org",
-    "https://www.weforum.org",
-    "https://www.techcrunch.com",
-    "https://perplexity.ai",
-    "https://youtube.com",
-    "https://x.com"
-  ],
   "browser": "chrome",
   "ai_assistant_name": "Sky",
   "user_name": "VRSEN",

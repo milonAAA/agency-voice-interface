@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 with open(os.getenv("PERSONALIZATION_FILE")) as f:
     personalization = json.load(f)
-browser_urls = personalization["browser_urls"]
 browser = personalization["browser"]
 
 
@@ -26,10 +25,7 @@ class OpenBrowser(BaseTool):
     chain_of_thought: str = Field(
         ..., description="Step-by-step thought process to determine the URL to open."
     )
-    url: str = Field(
-        ...,
-        description="The URL to open. Available options: " + ", ".join(browser_urls),
-    )
+    url: str = Field(..., description="The URL to open")
 
     @timeit_decorator
     async def run(self):
