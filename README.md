@@ -4,43 +4,63 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 
 ## Features
 
+### Core Functionality
 - Real-time voice interaction with an AI assistant
-- Integration with OpenAI's GPT-4o Realtime API
 - Asynchronous audio input and output handling
-- Custom function execution based on user requests
-- Visual interface for audio volume visualization
-- Structured output processing for efficient data handling
-- File management capabilities (create, update, delete)
+- Custom tools execution based on user requests
+
+### Task Delegation & Communication
+- **Synchronous Communication**: Direct, immediate interaction with agents for quick tasks
+- **Asynchronous Task Delegation**: Long-running task delegation to agencies/agents
+  - Send messages to agency CEOs without waiting for responses
+  - Send messages to subordinate agents on behalf of CEOs
+- **Task Status Monitoring**: Check completion status and retrieve responses
+- Multiple specialized AI agent teams working collaboratively
+
+### Integration Services
+- Google Calendar integration for meeting schedule management
+- Gmail integration for email handling and drafting
 - Browser interaction for web-related tasks
-- Task delegation to multiple teams of AI agents
-- Google Calendar integration
-- Gmail integration
+- File system operations (create, update, delete)
 
 ## Available Tools
 
-- **SendMessage**: Delegates tasks to agencies, or to specific agents within agencies.
+### Agency Communication Tools
+- **SendMessage**: Synchronous communication with agencies/agents for quick tasks
+  - Direct interaction with immediate response
+  - Suitable for simple, fast-completing tasks
 
-- **FetchDailyMeetingSchedule**: Fetches and formats the user's daily meeting schedule from Google Calendar.
-- **GetGmailSummary**: Provides a concise summary of unread Gmail messages from the past 48 hours.
-- **DraftGmail**: Composes email drafts, either as a reply to an email from GetGmailSummary, or as a new message.
-- **GetScreenDescription**: Captures and analyzes the current screen content for the assistant.
+- **SendMessageAsync**: Asynchronous task delegation
+  - Initiates long-running tasks without waiting
+  - Returns immediately to allow other operations
 
-- **CreateFile**: Generates new files with user-specified content.
-- **UpdateFile**: Modifies existing files with new content.
-- **DeleteFile**: Removes specified files from the system.
+- **GetResponse**: Task status and response retrieval
+  - Checks completion status of async tasks
+  - Retrieves agent responses when tasks complete
 
-- **OpenBrowser**: Launches a web browser with a given URL.
-- **GetCurrentDateTime**: Retrieves and reports the current date and time.
+### Google Workspace Integration
+- **FetchDailyMeetingSchedule**: Fetches and formats the user's daily meeting schedule from Google Calendar
+- **GetGmailSummary**: Provides a concise summary of unread Gmail messages from the past 48 hours
+- **DraftGmail**: Composes email drafts, either as a reply to an email from GetGmailSummary, or as a new message
+
+### System Tools
+- **GetScreenDescription**: Captures and analyzes the current screen content for the assistant
+- **FileOps**:
+   - **CreateFile**: Generates new files with user-specified content
+   - **UpdateFile**: Modifies existing files with new content
+   - **DeleteFile**: Removes specified files from the system
+- **OpenBrowser**: Launches a web browser with a given URL
+- **GetCurrentDateTime**: Retrieves and reports the current date and time
 
 ## Setup
 
 ### MacOS Installation
 
-1. Install [uv](https://docs.astral.sh/uv/), a modern Python package manager.
-2. Clone this repository to your local machine.
+1. Install [uv](https://docs.astral.sh/uv/), a modern Python package manager
+2. Clone this repository to your local machine
 3. Create a local environment file: `cp .env.sample .env`
-4. Insert your `OPENAI_API_KEY` into the `.env` file.
-5. Customize `personalization.json` and `config.py` to your preferences.
+4. Insert your `OPENAI_API_KEY` into the `.env` file
+5. Customize `personalization.json` and `config.py` to your preferences
 6. Install the required audio library: `brew install portaudio`
 7. Install project dependencies: `uv sync`
 8. Launch the assistant: `uv run main`
@@ -49,10 +69,10 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 
 To enable Google Cloud API integration, follow these steps:
 
-1. Create OAuth 2.0 Client IDs in the Google Cloud Console.
-2. Place the `credentials.json` file in the project's root directory.
-3. Configure `http://localhost:8080/` as an Authorized Redirect URI in your Google Cloud project settings.
-4. Set the OAuth consent screen to "Internal" user type.
+1. Create OAuth 2.0 Client IDs in the Google Cloud Console
+2. Place the `credentials.json` file in the project's root directory
+3. Configure `http://localhost:8080/` as an Authorized Redirect URI in your Google Cloud project settings
+4. Set the OAuth consent screen to "Internal" user type
 5. Enable the following APIs and scopes in your Google Cloud project:
    - Gmail API
      - `https://www.googleapis.com/auth/gmail.readonly`
@@ -79,6 +99,8 @@ After launching the assistant, interact using voice commands. Example interactio
 4. "Create a new file named user_data.txt with some example content."
 5. "Update the user_data.txt file by adding more information."
 6. "Delete the user_data.txt file."
+7. "Ask the research team to write a detailed market analysis report."
+8. "Check if the research team has completed the market analysis report."
 
 ## Code Structure
 
@@ -94,19 +116,19 @@ After launching the assistant, interact using voice commands. Example interactio
 ### Key Features
 
 1. **Asynchronous WebSocket Communication**:
-   Utilizes `websockets` for asynchronous connection with the OpenAI Realtime API.
+   Utilizes `websockets` for asynchronous connection with the OpenAI Realtime API
 
 2. **Audio Input/Output Handling**:
-   `AsyncMicrophone` class manages real-time audio capture and playback.
+   Manages real-time audio capture and playback with PCM16 format support and VAD (Voice Activity Detection)
 
 3. **Function Execution**:
-   Standalone tools in `tools/` are invoked by the AI assistant based on user requests.
+   Standalone tools in `tools/` are invoked by the AI assistant based on user requests
 
 4. **Structured Output Processing**:
-   OpenAI's Structured Outputs are used to generate precise, structured responses.
+   OpenAI's Structured Outputs are used to generate precise, structured responses
 
 5. **Visual Interface**:
-   PyGame-based interface provides real-time visualization of audio volume.
+   PyGame-based interface provides real-time visualization of audio volume
 
 ## Extending Functionality
 
@@ -115,8 +137,8 @@ After launching the assistant, interact using voice commands. Example interactio
 Standalone tools are independent functions not associated with specific agents or agencies.
 
 To add a new standalone tool:
-1. Create a new file in the `tools/` directory.
-2. Implement the `run` method using async syntax, utilizing `asyncio.to_thread` for blocking operations.
+1. Create a new file in the `tools/` directory
+2. Implement the `run` method using async syntax, utilizing `asyncio.to_thread` for blocking operations
 3. Install any necessary dependencies: `uv add <package_name>`
 
 ### Adding New Agencies
@@ -124,8 +146,9 @@ To add a new standalone tool:
 Agencies are Agency-Swarm style teams of specialized agents working together on complex tasks.
 
 To add a new agency:
-1. Drag-and-drop your agency folder into the `agencies/` directory.
-2. Install any required dependencies: `uv add <package_name>`
+1. Drag-and-drop your agency folder into the `agencies/` directory
+2. Set `async_mode="threading"` in agency configuration to enable async messaging (SendMessageAsync and GetResponse)
+3. Install any required dependencies: `uv add <package_name>`
 
 ## Development Roadmap
 
