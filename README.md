@@ -56,10 +56,10 @@ This project demonstrates the use of OpenAI's Realtime API to create an AI assis
 
 ### MacOS Installation
 
-1. Install [uv](https://docs.astral.sh/uv/), a modern Python package manager
-2. Clone this repository to your local machine
-3. Create a local environment file: `cp .env.sample .env`
-4. Insert your `OPENAI_API_KEY` into the `.env` file
+1. Install [Python 3.12](https://www.python.org/downloads/macos/).
+2. Install [uv](https://docs.astral.sh/uv/), a modern Python package manager
+3. Clone this repository to your local machine
+4. Create a local environment file `.env` based on `.env.sample`
 5. Customize `personalization.json` and `config.py` to your preferences
 6. Install the required audio library: `brew install portaudio`
 7. Install project dependencies: `uv sync`
