@@ -150,20 +150,8 @@ To add a new agency:
 2. Set `async_mode="threading"` in agency configuration to enable async messaging (SendMessageAsync and GetResponse)
 3. Install any required dependencies: `uv add <package_name>`
 
-## Development Roadmap
-
-- [x] Implement standalone tools
-- [x] Complete agency integration
-- [ ] Develop interruption handling for smoother conversations
-- [ ] Implement transcript logging for conversation tracking
-- [ ] Convert `personalization.json` to a Pydantic model for improved type safety
-- [ ] Enable parallel execution of tools for increased efficiency
-- [ ] Resolve audio cutoff issues at the end of responses
-
 ## Additional Resources
 
 - [OpenAI Realtime API Documentation](https://platform.openai.com/docs/guides/realtime)
 - [OpenAI Structured Outputs Guide](https://platform.openai.com/docs/guides/structured-outputs)
 - [WebSockets Library for Python](https://websockets.readthedocs.io/)
-- [PyAudio Documentation](https://people.csail.mit.edu/hubert/pyaudio/docs/)
-- [Pygame Documentation](https://www.pygame.org/docs/)
